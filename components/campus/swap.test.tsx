@@ -60,7 +60,7 @@ describe('Cornell Tech', () => {
 
 describe('"Change campus" in the account card', () => {
   const viewer = { first: 'Sam', name: 'Sam Lee', photo: null, face: 0, ownPhoto: null, own: null, owns: [], personal: [], picks: { core: [], premium: [], school: [] }, schools: { profile: null, home: null, added: [], all: [] }, asked: false, makesLeft: 0, anyKit: false, level: 0, outings: 0, admin: false, groups: [] } as unknown as NonNullable<Screen['viewer']>;
-  const model: Screen = { campus: { slug: 'cornell', name: 'Cornell', tz: 'America/New_York', listSource: 'CampusGroups' }, viewer, tickets: [], earning: [], live: null, places: [] };
+  const model: Screen = { campus: { slug: 'cornell', name: 'Cornell', tz: 'America/New_York', listSource: 'CampusGroups' }, viewer, tickets: [], earning: [], live: null, places: [], spots: [] };
   const card = (swap?: SwapCampus[]) => { render(<CampusScreen screen={model} swap={swap} signInHref="/sign-in" />); fireEvent.click(screen.getByRole('button', { name: /Show your level/ })); };
 
   it('names your campus and moves you to the other one with one press', async () => {

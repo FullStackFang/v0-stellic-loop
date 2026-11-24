@@ -3,6 +3,7 @@ import type { Db } from '../db';
 import { knownTo } from './knows';
 import { LEVELS, levelOf, textFor } from './levels';
 import { addedSchools } from './linkedin';
+import { ensureDealDays } from './deals';
 import { findListing, listCampuses, weekListings, type Campus, type Listing } from './listings';
 import { schoolOf } from './schools';
 import { inviteChoices, outingsOn, pickOuting, type Outing } from './outings';
@@ -13,8 +14,10 @@ import { plansOf, type Plan } from './ink';
 import { accountPhotos, firstNames, pickedFaces, type Photos } from './people';
 import { campusRewards, countedOutings, countsToward, groupRewardFor, progress, unitOf, type Counted, type Reward } from './rewards';
 import { nearTags } from './tags';
+import { clockLabel, offeredTimes } from './line';
+import { campusPlaces, placeTag, PLACES_REQUIRED } from './places';
 import { checkInOpen, dayLabel, endOf, localParts, timeLabel } from './time';
-import type { Coupon, Face, Live, Screen, Seat, Stub, Ticket, Viewer } from './view';
+import type { Coupon, Face, Live, Screen, Seat, Spot, Stub, Ticket, Viewer } from './view';
 
 // Everything the campus screen shows one viewer (design D16, D19). What a person may see of others is decided here and
 // nowhere else: first names and photos of people they know and of the people in their own outing, a count for the rest,
@@ -36,11 +39,13 @@ function timeWords(tz: string, startsAt: string, now: Date): string[] {
 
 export async function campusScreen(db: Db, campus: Campus, viewer: ScreenViewer | null, options: { now?: Date; photos?: Photos; link?: ShareLink } = {}): Promise<Screen> {
   const now = options.now ?? new Date(), tz = campus.tz, me = viewer?.personId ?? null, link = options.link;
+  // Today's activity of each deal is made by the first read of the day (openspec campus-deals, design D2).
+  const deals = await ensureDealDays(db, campus, now);
   let listings: Listing[] = await weekListings(db, campus, now);
-  // A share link can point at a plan beyond this week; it is shown with the week.
+  // A share link can point at a plan beyond this week; it is shown with the week. A deal's day is shown only while it runs, so never this way.
   if (link && !listings.some(listing => listing.id === link.listingId)) {
     const extra = await findListing(db, link.listingId);
-    if (extra?.live && extra.campusId === campus.id && endOf(extra.startsAt, extra.endsAt) > now.getTime()) listings = [...listings, extra].sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+    if (extra?.live && !extra.dealId && extra.campusId === campus.id && endOf(extra.startsAt, extra.endsAt) > now.getTime()) listings = [...listings, extra].sort((a, b) => a.startsAt.localeCompare(b.startsAt));
   }
   const [counted, allRewards] = await Promise.all([me ? countedOutings(db, me) : [], campusRewards(db, campus.id, true)]);
   const level = levelOf(counted.length), rewards = allRewards.filter(reward => !reward.hidden);
@@ -48,8 +53,9 @@ export async function campusScreen(db: Db, campus: Campus, viewer: ScreenViewer 
     // Two kinds of event outside the week are still the viewer's own business. What they posted or are in for further
     // ahead, so a plan ten days out can be seen and changed by its poster. And what they checked in on that ended in
     // the last day, while it carries a group reward: a reward unlocked at the end of an event must still be usable.
+    // Not a deal's day: it is gone from the page at its end (openspec campus-deals, design D3).
     const { rows } = await db.query<{ id: string; past: boolean }>(`select l.id,coalesce(l.ends_at,l.starts_at+interval '2 hours')<=$3::timestamptz as past from campus_listing l
-      where l.campus_id=$1 and ((l.hidden_at is null and l.cancelled_at is null and l.left_feed_at is null
+      where l.campus_id=$1 ${deals ? 'and l.deal_id is null' : ''} and ((l.hidden_at is null and l.cancelled_at is null and l.left_feed_at is null
           and l.starts_at>=((($3::timestamptz at time zone $4)::date+7)::timestamp at time zone $4)
           and (l.posted_by=$2 or exists(select 1 from campus_outing_member m where m.listing_id=l.id and m.person_id=$2)))
         or (coalesce(l.ends_at,l.starts_at+interval '2 hours')<=$3::timestamptz and coalesce(l.ends_at,l.starts_at+interval '2 hours')>$3::timestamptz-interval '24 hours'
@@ -65,11 +71,14 @@ export async function campusScreen(db: Db, campus: Campus, viewer: ScreenViewer 
   const on = new Map<string, Outing[]>();
   for (const outing of outings) on.set(outing.listingId, [...(on.get(outing.listingId) ?? []), outing]);
 
-  const [known, invited, groupUses, used] = await Promise.all([
+  const openIds = listings.filter(listing => listing.timeOpen).map(listing => listing.id);
+  const [known, invited, groupUses, used, timePicks] = await Promise.all([
     me ? knownTo(db, me) : new Map<string, string>(),
     me && outingIds.length ? db.query<{ id: string }>('select outing_id as id from campus_invite where invitee_id=$1 and outing_id=any($2::uuid[])', [me, outingIds]).then(result => new Set(result.rows.map(row => row.id))) : new Set<string>(),
     outingIds.length ? db.query<{ rewardId: string; outingId: string; usedAt: string }>('select reward_id as "rewardId",outing_id as "outingId",used_at as "usedAt" from campus_reward_use where outing_id=any($1::uuid[])', [outingIds]).then(result => result.rows) : [],
     me ? db.query<{ id: string; usedAt: string }>('select reward_id as id,used_at as "usedAt" from campus_reward_use where person_id=$1 and outing_id is null', [me]).then(result => new Map(result.rows.map(row => [row.id, row.usedAt]))) : new Map<string, string>(),
+    // "When works?" marks, on plans whose time is not set (openspec campus-plan-place-and-time, design D6).
+    openIds.length ? db.query<{ listingId: string; personId: string; at: string }>(`select listing_id as "listingId",person_id as "personId",to_char(at,'HH24:MI') as at from campus_time_pick where listing_id=any($1::uuid[]) order by at`, [openIds]).then(result => result.rows) : [],
   ]);
 
   const mineOn = new Map<string, Outing>();
@@ -85,6 +94,8 @@ export async function campusScreen(db: Db, campus: Campus, viewer: ScreenViewer 
     for (const listing of listings) if (listing.origin === 'member' && listing.postedBy) shown.add(listing.postedBy);
     for (const some of choices.values()) for (const choice of some) shown.add(choice.personId);
   }
+  // Who marked a time is seen as the people going are: those the viewer knows, and those in the viewer's own outing.
+  const seesMark = (listingId: string, personId: string) => personId === me || known.has(personId) || !!mineOn.get(listingId)?.members.some(member => member.personId === personId);
   const [names, picks, schoolAt] = await Promise.all([firstNames(db, [...shown]), pickedFaces(db, [...shown]), schoolsAt(db, [...shown])]);
   // Everyone has an animal: the one they picked, else the one their id works out to. A photo is read only for a person
   // who picked theirs, and for the viewer, who is offered it in the account card.
@@ -99,7 +110,7 @@ export async function campusScreen(db: Db, campus: Campus, viewer: ScreenViewer 
 
   let live: Live | null = null;
   const tickets = listings.map((listing): Ticket => {
-    const here = on.get(listing.id) ?? [], feed = listing.origin === 'feed', open = checkInOpen(listing.startsAt, listing.endsAt, now);
+    const here = on.get(listing.id) ?? [], feed = listing.origin === 'feed', open = !listing.timeOpen && checkInOpen(listing.startsAt, listing.endsAt, now);
     const picked = pickOuting(here, me, known, invited), mine = picked.mine ? picked.outing! : null;
     const linked = link?.listingId === listing.id ? here.find(outing => outing.id === link.outingId) : undefined;
     const joinToken = linked && linked !== mine ? link!.token : null;
@@ -166,24 +177,42 @@ export async function campusScreen(db: Db, campus: Campus, viewer: ScreenViewer 
     const short = stub.kind === 'group' && stub.state === 'near';
     const later = new Date(Math.max(Date.parse(listing.startsAt), now.getTime())), mapAt = localParts(tz, later);
     const beyond = Date.parse(`${mapAt.date}T00:00:00Z`) - Date.parse(`${localParts(tz, now).date}T00:00:00Z`) > 6 * 86400000;
+    const member = listing.origin === 'member', poster = member && !!me && listing.postedBy === me;
+    let timeOpen: Ticket['timeOpen'] = null;
+    if (listing.timeOpen) {
+      const marks = timePicks.filter(pick => pick.listingId === listing.id), people = new Set(here.flatMap(outing => outing.members.map(each => each.personId)));
+      people.delete(listing.postedBy ?? '');
+      timeOpen = { day: at.date, poster, answered: new Set(marks.map(mark => mark.personId)).size, of: people.size,
+        times: offeredTimes(at.date, tz, now).map(time => {
+          const by = marks.filter(mark => mark.at === time);
+          return { at: time, label: clockLabel(time), count: by.length, mine: by.some(mark => mark.personId === me),
+            faces: me ? by.filter(mark => seesMark(listing.id, mark.personId)).map(mark => face(mark.personId, { me: mark.personId === me })) : [] };
+        }) };
+    }
+    const setBy = listing.timeSetAt && mine && !poster && Date.parse(listing.startsAt) > now.getTime()
+      ? `${names.get(listing.postedBy ?? '')?.first ?? 'Someone'} set it: ${dayLabel(tz, listing.startsAt, now)} at ${timeLabel(tz, listing.startsAt)}.` : null;
     return {
-      id: listing.id, title: listing.title, day: dayLabel(tz, listing.startsAt, now), time: timeLabel(tz, listing.startsAt), when: listing.startsAt,
+      id: listing.id, title: listing.title, day: dayLabel(tz, listing.startsAt, now), time: listing.timeOpen ? '?' : timeLabel(tz, listing.startsAt), when: listing.startsAt,
       mapDate: mapAt.date, mapDay: beyond ? `${mapAt.weekday} ${Number(mapAt.date.slice(8))}` : dayLabel(tz, later, now),
-      ends: listing.endsAt ? `until ${timeLabel(tz, listing.endsAt)}` : null, source: listing.source,
+      ends: listing.endsAt && !listing.timeOpen ? `until ${timeLabel(tz, listing.endsAt)}` : null, source: listing.source,
       // Who posted a plan is for signed-in people only.
       by: listing.origin === 'member' ? (me && listing.postedBy ? `Posted by ${names.get(listing.postedBy)?.first ?? 'Someone'}` : null) : listing.host,
       place: listing.placeText ?? listing.place?.name ?? null, about: listing.about, link: listing.link, tags: listing.tags, map: listing.place,
-      words: [...listing.words, ...timeWords(tz, listing.startsAt, now), ...listing.tags],
+      words: [...listing.words, ...(listing.timeOpen ? [] : timeWords(tz, listing.startsAt, now)), ...listing.tags],
       pull: (mine || picked.outing && invited.has(picked.outing.id) ? 4 : 0) + Math.min(knownGoing.length, 2) + (stub.kind === 'none' ? 0 : 2) + (short ? 2 : 0) + (today ? 1 : 0),
       going: listing.going, stub, how,
       known: knownGoing.map(member => ({ ...face(member.personId, { here: member.here }), why: known.get(member.personId)! })),
       mine: mine && self ? {
         token: mine.token, registered: self.registered, here: iAmHere, canLeave: !iAmHere,
-        canEdit: listing.origin === 'member' && listing.postedBy === me && Date.parse(listing.startsAt) > now.getTime(),
+        canEdit: listing.origin === 'member' && listing.postedBy === me && Date.parse(listing.timeOpen ? listing.endsAt ?? listing.startsAt : listing.startsAt) > now.getTime(),
+        canCancel: listing.origin === 'member' && listing.postedBy === me && endOf(listing.startsAt, listing.endsAt) > now.getTime(),
         members: mine.members.map(member => face(member.personId, { here: member.here, me: member.personId === me })),
         choices: (choices.get(mine.id) ?? []).map(choice => ({ ...choice, first: names.get(choice.personId)?.first ?? 'Someone', photo: picture(choice.personId), plan: planOf(choice.personId), school: schoolAt.get(choice.personId) ?? null })),
       } : null,
+      // Only the line, the size and the end: what the deal really is stays on the admin page.
+      deal: listing.dealId && found ? { line: found.text, need: found.reward.headCount!, until: listing.endsAt ? `until ${timeLabel(tz, listing.endsAt)}` : null } : null,
       action, status, joinToken,
+      member, byFace: member && me && listing.postedBy ? face(listing.postedBy) : null, timeOpen, setBy,
     };
   });
 
@@ -199,7 +228,16 @@ export async function campusScreen(db: Db, campus: Campus, viewer: ScreenViewer 
     campus: { slug: campus.slug, name: campus.name, tz, listSource: campus.listSource },
     viewer: viewer && await accountViewer(db, viewer, { read: { names, picks, photos, made, plans, counted } }),
     tickets, earning, live, places: me ? await nearTags(db, campus.id, known, now) : [],
+    spots: PLACES_REQUIRED.has(campus.slug) ? await spotsOf(db, campus.id) : [],
   };
+}
+
+/** Where a plan may meet, with how many plans have met there: the posting panel's place picker. */
+async function spotsOf(db: Db, campusId: string): Promise<Spot[]> {
+  const [places, { rows }] = await Promise.all([campusPlaces(db, campusId),
+    db.query<{ id: string; used: number }>("select place_id as id,count(*)::int as used from campus_listing where campus_id=$1 and origin='member' and place_id is not null and cancelled_at is null group by place_id", [campusId])]);
+  const used = new Map(rows.map(row => [row.id, row.used]));
+  return places.map(place => ({ name: place.name, tag: placeTag(place), kind: place.kind ?? 'building', lat: place.lat, lon: place.lon, used: used.get(place.id) ?? 0 }));
 }
 
 /** What is read of people to draw their faces: names, picked animals, photos, made animals and plans, by person. */
@@ -234,5 +272,5 @@ export async function accountViewer(db: Db, viewer: ScreenViewer, options: { pho
 /** The screen a bar that draws no week is given: its campus and the account card, with the week's lists left empty. */
 export async function barScreen(db: Db, campus: Campus, viewer: ScreenViewer | null): Promise<Screen> {
   return { campus: { slug: campus.slug, name: campus.name, tz: campus.tz, listSource: campus.listSource },
-    viewer: viewer && await accountViewer(db, viewer), tickets: [], earning: [], live: null, places: [] };
+    viewer: viewer && await accountViewer(db, viewer), tickets: [], earning: [], live: null, places: [], spots: [] };
 }

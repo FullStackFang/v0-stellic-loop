@@ -12,7 +12,8 @@ import { signedOutAsks, signedOutPresses, subscribeAsks } from '@/lib/campus/ink
 import { adminEmails } from '@/lib/campus/admin';
 import { LEVELS } from '@/lib/campus/levels';
 import { linkedinPeople, type LinkedinPerson } from '@/lib/campus/linkedin';
-import { listCampuses } from '@/lib/campus/listings';
+import { dealsReady, listCampuses } from '@/lib/campus/listings';
+import { campusDeals, dealRewardIds, type Deal } from '@/lib/campus/deals';
 import { adminListings, campusFeeds } from '@/lib/campus/manage';
 import { campusPlaces } from '@/lib/campus/places';
 import { typedPlaces } from '@/lib/when/places';
@@ -25,6 +26,7 @@ import { siteBar } from '../site-bar';
 import { WordsField } from '@/components/campus/words-field';
 import { PickCount } from '@/components/campus/pick-count';
 import { AnimalForm } from './animal-form';
+import { DealForm } from './deal-form';
 import { WaitButton } from '@/components/campus/wait-button';
 import { campusTags, KINDS } from '@/lib/campus/tags';
 import { dayLabel, localParts, timeLabel } from '@/lib/campus/time';
@@ -35,8 +37,10 @@ export const dynamic = 'force-dynamic';
 
 const RULES = { outings: 'any outings', word: 'outings on events with a word', weeks: 'the same group at the giver’s events, weeks in a row' } as const;
 /** The sections, down the left. The page shows one at a time. What waits for the admin comes first (public/demo/mockups-admin-review.html). */
-const TABS = { activity: 'Activity', people: 'People', review: 'Review', clubs: 'Clubs', schools: 'Schools', events: 'Events', rewards: 'Rewards', feeds: 'Feeds', places: 'Places', tags: 'Tags', animals: 'Animals', premium: 'Premium', linkedin: 'LinkedIn', campus: 'Campus' } as const;
+const TABS = { activity: 'Activity', people: 'People', review: 'Review', clubs: 'Clubs', schools: 'Schools', events: 'Events', deals: 'Deals', rewards: 'Rewards', feeds: 'Feeds', places: 'Places', tags: 'Tags', animals: 'Animals', premium: 'Premium', linkedin: 'LinkedIn', campus: 'Campus' } as const;
 type Tab = keyof typeof TABS;
+/** A deal's days in the form and the list, Monday first. Sunday is 0. */
+const WEEK = [[1, 'Mon'], [2, 'Tue'], [3, 'Wed'], [4, 'Thu'], [5, 'Fri'], [6, 'Sat'], [0, 'Sun']] as const;
 /** Where an animal stands. One a person had made, and nobody else may pick, is `own`: it is listed with the ones that are off. */
 const TIER = { core: 'Core', premium: 'Premium', school: 'School', off: 'Off', own: 'Maker only' } as const;
 /** Where the admin can move an animal to, in the order the buttons show. */
@@ -54,7 +58,10 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
   if (!campus) notFound();
   const tab: Tab = asked && asked in TABS ? asked as Tab : 'events', show: Show = SHOW.find(each => each === wanted) ?? 'all';
   const now = new Date(), tz = campus.tz;
-  const [found, allRewards, allFeeds, allPlaces, asks, all, allTags, linked, wanted_, clubs, claims] = await Promise.all([adminListings(db(), campus.id, tab === 'events' ? q : ''), campusRewards(db(), campus.id, true), campusFeeds(db(), campus.id), campusPlaces(db(), campus.id), premiumAsks(db()), catalogue(db()), campusTags(db(), campus.id), linkedinPeople(db()), schoolsAsked(db()), clubAsks(db()).catch(() => []), clubClaims(db()).catch((): AdminClaim[] => [])]);
+  const [found, everyReward, allFeeds, allPlaces, asks, all, allTags, linked, wanted_, clubs, claims] = await Promise.all([adminListings(db(), campus.id, tab === 'events' ? q : ''), campusRewards(db(), campus.id, true), campusFeeds(db(), campus.id), campusPlaces(db(), campus.id), premiumAsks(db()), catalogue(db()), campusTags(db(), campus.id), linkedinPeople(db()), schoolsAsked(db()), clubAsks(db()).catch(() => []), clubClaims(db()).catch((): AdminClaim[] => [])]);
+  // Deals, and the rewards made for their days, which the Rewards list leaves out (openspec campus-deals, design D7).
+  const [ready, deals, fromDeals] = await Promise.all([dealsReady(db()), campusDeals(db(), campus.id), dealRewardIds(db(), campus.id)]);
+  const allRewards = everyReward.filter(reward => !fromDeals.has(reward.id));
   // The names typed for a poll's place that the list does not have. Read only on the Places tab.
   const typedNames = tab === 'places' ? await typedPlaces(db(), campus.id).catch(() => []) : [];
   // Every sign-up, with the button pressed, and every ask for a call (app/c/ink). Read only on the Premium tab.
@@ -68,7 +75,7 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
   const claimsWaiting = claims.filter(each => each.state === 'waiting').length;
   const failed = allFeeds.filter(feed => feed.on && feed.lastReadAt && feed.lastOk === false).length;
   // Activity and People are about the whole site and carry no count.
-  const counts: Partial<Record<Tab, number>> = { review: waiting, clubs: claims.length, schools: wanted_.length, events: found.total, rewards: allRewards.length, feeds: allFeeds.length, places: allPlaces.length, tags: allTags.length, animals: all.built.length + all.made.length, premium: asks.length, linkedin: linked.length - waiting, campus: campuses.length };
+  const counts: Partial<Record<Tab, number>> = { review: waiting, clubs: claims.length, schools: wanted_.length, events: found.total, deals: deals.length, rewards: allRewards.length, feeds: allFeeds.length, places: allPlaces.length, tags: allTags.length, animals: all.built.length + all.made.length, premium: asks.length, linkedin: linked.length - waiting, campus: campuses.length };
   /** The head of a section: its name, then what sits beside it (a search, the forms that add to it). */
   const top = (beside?: ReactNode) => <div className="cs-adm-top"><h1>{TABS[tab]}</h1>{beside}</div>;
 
@@ -86,6 +93,32 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
           <td><b>{event.title}</b><small>{event.origin === 'feed' ? event.source : event.origin === 'member' ? 'Posted plan' : 'Entered by hand'}{event.host ? ` · ${event.host}` : ''}{event.placeText ? ` · ${event.placeText}${event.matched ? ' (on the map)' : ''}` : ''}</small></td>
           <td><form action={setWordsAction} className="words">{keep}<input type="hidden" name="listing" value={event.id} /><input name="words" aria-label={`Good-for words of ${event.title}`} defaultValue={event.words.join(' ')} placeholder="up to twelve words" /><button className="b">Save</button></form></td>
           <td><form action={setHiddenAction}>{keep}<input type="hidden" name="listing" value={event.id} /><input type="hidden" name="hidden" value={String(!event.hidden)} /><button className={`cs-adm-sw ${event.hidden ? '' : 'on'}`} aria-pressed={!event.hidden} aria-label={`${event.title} is shown`} /></form></td></tr>)}</tbody></table>
+    </section>;
+  }
+
+  /**
+   * Deals (openspec campus-deals, design D7): entered once, each day it runs becomes an activity with a group reward,
+   * shown only during its hours. The note is for the admin alone. Every press stays on the page (DealForm).
+   */
+  function dealsTab() {
+    if (!ready) return <section>{top()}<p className="cs-adm-lede">Run supabase/migrations/20261124050000_campus_deals.sql first. Until then no deal is read or made, and the campus page is as it was.</p></section>;
+    const hours = (deal: Pick<Deal, 'from' | 'until'>) => [deal.from, deal.until].map(at => timeLabel('UTC', `2000-01-01T${at}:00Z`)).join('–');
+    const runs = (days: number[]) => days.length === 7 ? 'Every day' : WEEK.filter(([day]) => days.includes(day)).map(([, name]) => name).join(', ');
+    const form = (deal?: Deal) => <DealForm className="cs-adm-form" fresh={!deal}>{keep}{deal && <input type="hidden" name="deal" value={deal.id} />}
+      <div className="three">
+        <label>Place<select name="place" required defaultValue={deal?.placeId ?? ''}><option value="" disabled>Pick a place</option>{allPlaces.map(place => <option key={place.id} value={place.id}>{place.name}</option>)}</select></label>
+        <label>Activity name<input name="title" required maxLength={200} placeholder="Drinks at Nisi Bistro" defaultValue={deal?.title} /></label>
+        <label>The deal, as students see it<input name="line" required maxLength={200} placeholder="$2 off every drink" defaultValue={deal?.line} /></label></div>
+      <span className="cs-adm-pills" role="group" aria-label="Group of">{[2, 3, 4].map(size => <label key={size}><input type="radio" name="size" value={size} defaultChecked={(deal?.headCount ?? 2) === size} />{size}+</label>)}</span>
+      <span className="cs-adm-pills" role="group" aria-label="Days">{WEEK.map(([day, name]) => <label key={day}><input type="checkbox" name="day" value={day} defaultChecked={deal ? deal.days.includes(day) : false} />{name}</label>)}</span>
+      <div className="three"><label>From <small>{tz}</small><input name="from" type="time" required defaultValue={deal?.from ?? '17:00'} /></label><label>Until<input name="until" type="time" required defaultValue={deal?.until ?? '19:00'} /></label>
+        <label>Only you see this <small>what it really is, where it came from</small><input name="note" maxLength={1000} defaultValue={deal?.note ?? ''} /></label></div>
+      <button className="cs-btn sm go" name="step" value="save">{deal ? 'Save' : 'Add deal'}</button></DealForm>;
+    return <section>{top(<details><summary>Add deal</summary>{allPlaces.length ? form() : <p className="cs-adm-lede">Add the place under Places first.</p>}</details>)}
+      <p className="cs-adm-lede">On each day it runs, its activity shows on the campus page from its start to its end: in the list to people standing in its part of the map, and on the map to anyone. It unlocks like any group reward.</p>
+      <ul className="cs-adm-rows">{deals.map(deal => <li key={deal.id} className={deal.hidden ? 'off' : ''}><details><summary><div><b>{deal.title}: {deal.line}</b><span>{deal.place} · {deal.headCount}+ · {runs(deal.days)} · {hours(deal)}</span>{deal.note && <span>{deal.note}</span>}</div>{deal.hidden && <span className="cs-adm-hid">Hidden</span>}<i className="b">Edit</i></summary>{form(deal)}</details>
+          <DealForm>{keep}<input type="hidden" name="deal" value={deal.id} /><button className="cs-btn sm" name="step" value={deal.hidden ? 'show' : 'hide'}>{deal.hidden ? 'Show' : 'Hide'}</button></DealForm></li>)}
+        {!deals.length && <li className="off"><span>No deals yet.</span></li>}</ul>
     </section>;
   }
 
@@ -279,7 +312,7 @@ export default async function CampusAdminPage({ searchParams }: { searchParams: 
   const span: Span = days && days in SPANS ? days as Span : '30', signsIn: Way | null = way && way in WAYS ? way as Way : null, lines = Math.min(Math.max(Number(n) || 50, 50), 2000);
   const activity = () => <Activity tz={tz} span={span} top={top} href={to => `${at('activity')}&days=${to}`} />;
   const people = () => <People tz={tz} way={signsIn} shown={lines} top={top} href={(to, shown) => `${at('people')}${to ? `&way=${to}` : ''}${shown ? `&n=${shown}` : ''}`} />;
-  const body = { activity, people, review, clubs: clubsClaimed, schools: askedFor, events, rewards, feeds, places, tags, animals, premium, linkedin, campus: school }[tab]();
+  const body = { activity, people, review, clubs: clubsClaimed, schools: askedFor, events, deals: dealsTab, rewards, feeds, places, tags, animals, premium, linkedin, campus: school }[tab]();
   return <div className="cs">
     {bar}
     <main className="cs-adm">

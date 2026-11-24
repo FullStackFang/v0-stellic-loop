@@ -150,6 +150,11 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 .cs-more svg { width: 15px; height: 15px; transition: transform .35s var(--cs-expo); } .cs-more[aria-expanded=true] svg { transform: rotate(180deg); }
 .cs-ev h3 { font-size: 20px; font-weight: 660; letter-spacing: -0.032em; line-height: 1.15; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .cs-body > p { font-size: 13.5px; color: var(--cs-mute); margin-top: 3px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+/* A deal's card leads with the deal (openspec campus-deals, public/demo/mockups-campus-deals-real.html): the line in large type on the field, then an ink pill and when it ends. */
+.cs-deal { display: grid; gap: 5px; margin-top: 8px; padding: 10px 12px 11px; border-radius: 12px 12px 12px 3px; background: var(--cs-field); color: var(--cs-ink); }
+.cs-deal strong { font-size: 21px; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; overflow-wrap: anywhere; }
+.cs-deal span { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 640; }
+.cs-deal b { padding: 1px 8px 2px; border-radius: 99px; font-size: 11.5px; font-weight: 800; color: var(--cs-field); background: var(--cs-ink); }
 .cs-mech { position: relative; flex: 1; display: flex; flex-direction: column; gap: 12px; padding: 15px 16px 16px; background: var(--cs-stub); cursor: pointer; }
 .cs-mech:not(.none) { -webkit-mask: radial-gradient(circle var(--cut) at 0 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)); -webkit-mask-composite: source-in; mask: radial-gradient(circle var(--cut) at 0 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)), radial-gradient(circle var(--cut) at 100% 0, #0000 calc(var(--cut) - .5px), #000 var(--cut)); mask-composite: intersect; }
 .cs-mech:not(.none)::before { content: ''; position: absolute; top: -1px; left: 18px; right: 18px; border-top: 2px dashed color-mix(in oklch, var(--cs-ink) 55%, transparent); }
@@ -618,6 +623,12 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-adm-stand { display: grid; flex: 1; grid-template-columns: repeat(4, 1fr); height: 36px; padding: 3px; border-radius: 99px; background: color-mix(in oklch, var(--cs-ink) 8%, transparent); }
 .cs-adm-stand button { border-radius: 99px; font-size: 13.5px; font-weight: 600; transition: background .2s, color .2s; } .cs-adm-stand button:hover { background: color-mix(in oklch, var(--cs-ink) 8%, transparent); }
 .cs-adm-stand button[aria-pressed=true] { font-weight: 700; background: var(--cs-ink); color: var(--cs-paper); }
+/* The Deals form's group size and days (openspec campus-deals): each choice a pill, picked ones in ink. */
+.cs-adm-form .cs-adm-pills { display: flex; flex-wrap: wrap; gap: 6px; width: auto; }
+.cs-adm-form .cs-adm-pills label { display: inline-flex; align-items: center; height: 32px; padding: 0 14px; border-radius: 99px; font-size: 13.5px; font-weight: 600; cursor: pointer; box-shadow: inset 0 0 0 1.5px var(--cs-ink); transition: background .15s, color .15s; }
+.cs-adm-pills input { position: absolute; opacity: 0; pointer-events: none; }
+.cs-adm-pills label:has(input:checked) { font-weight: 700; background: var(--cs-ink); color: var(--cs-paper); } .cs-adm-pills label:has(input:focus-visible) { outline: 2px solid var(--cs-action); outline-offset: 2px; }
+.cs-adm-hid { display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 99px; font-size: 12px; font-weight: 700; background: color-mix(in oklch, var(--cs-ink) 10%, transparent); }
 .cs-adm-card details { display: flex; } .cs-adm-card summary { display: inline-flex; align-items: center; height: 36px; padding: 0 14px; border-radius: 99px; font-size: 13.5px; font-weight: 620; color: var(--adm-warn); box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--adm-warn) 45%, transparent); }
 .cs-adm-card details[open] summary { display: none; } .cs-adm-card details button { height: 36px; padding: 0 14px; border-radius: 99px; font-size: 13.5px; font-weight: 660; background: var(--adm-warn); color: var(--cs-paper); }
 ::view-transition-group(*) { animation-duration: .4s; animation-timing-function: var(--cs-expo); }
@@ -1008,3 +1019,40 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
   .cs-nav .cs-acct { position: static; }
   .cs-nav .cs-acct .cs-lvl { left: 12px; right: 12px; top: calc(100% + 14px); width: auto; max-width: none; max-height: calc(100dvh - 92px); overflow-y: auto; scrollbar-width: none; transform-origin: 80% 0; }
 }
+
+/* A plan whose time is not set, and where it meets (openspec campus-plan-place-and-time; public/demo/mockups-map-intent.html, mockups-map-time.html).
+   "?" is red on a white tile or stamp until its poster sends the time. */
+.cs { --cs-open: #e2412b; }
+.cs-tile.open { background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); } .cs-tile.open b { color: var(--cs-open); }
+.cs-chip.when.open { background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+.cs-postage.open > span { background: var(--card, #fff); } .cs-postage.open b { color: var(--cs-open); }
+.cs-postage .cs-by { width: 28px; height: 28px; border-radius: 50%; box-shadow: 0 0 0 1.3px var(--cs-ink); }
+/* The where line: the day and time, then where they meet. Asking, it is warm until a place is picked. */
+.cs-where { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; min-height: 58px; margin-top: 10px; padding: 7px 10px 7px 7px; border-radius: 14px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+.cs-where.ask { background: color-mix(in oklab, var(--cs-open) 12%, var(--cs-paper)); }
+.cs-where .txt { min-width: 0; font-size: 14.5px; line-height: 1.25; } .cs-where .txt b { font-weight: 760; } .cs-where .txt small { display: block; margin-top: 2px; font-size: 12px; color: var(--cs-mute); }
+/* Kinds as tabs on top of one box of place pills. The box keeps one height and never scrolls: nothing pushes the panel open. */
+.cs-pick { display: grid; margin-top: 10px; }
+.cs-kinds { display: flex; gap: 4px; padding-left: 10px; overflow: hidden; }
+.cs .cs-kinds button { position: relative; z-index: 1; height: 30px; padding: 0 11px; border-radius: 11px 11px 0 0; font-size: 12.5px; font-weight: 700; white-space: nowrap; background: color-mix(in oklab, var(--cs-ink) 7%, var(--cs-page)); box-shadow: inset 0 1.5px 0 var(--cs-ink), inset 1.5px 0 0 var(--cs-ink), inset -1.5px 0 0 var(--cs-ink); }
+.cs .cs-kinds button:hover { background: var(--cs-field); } .cs .cs-kinds button[aria-pressed=true] { background: var(--cs-paper); margin-bottom: -1.5px; height: 31.5px; }
+.cs-box { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 6px; height: 152px; overflow: hidden; padding: 10px; border-radius: 4px 14px 14px 14px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+.cs .cs-place { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; height: 30px; padding: 0 11px 0 6px; border-radius: 99px; font-size: 12.5px; font-weight: 680; white-space: nowrap; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+.cs .cs-place:hover { background: var(--cs-field); } .cs .cs-place[aria-pressed=true] { color: var(--cs-field); background: var(--cs-ink); }
+.cs-place span { overflow: hidden; text-overflow: ellipsis; } .cs-place svg { flex: none; width: 18px; height: 18px; padding: 2px; border-radius: 50%; background: var(--cs-field); color: var(--cs-ink); box-shadow: inset 0 0 0 1.2px var(--cs-ink); }
+/* The places on the map while posting: small dots, the open tab's ringed, the name shown when pointed at. */
+.cs .cs-dot { position: relative; display: block; width: 12px; height: 12px; border-radius: 50%; background: var(--cs-paper); box-shadow: 0 0 0 1.5px var(--cs-ink); cursor: pointer; }
+.cs .cs-dot.ring { background: var(--cs-field); box-shadow: 0 0 0 1.5px var(--cs-ink), 0 0 0 4px var(--cs-paper), 0 0 0 5.5px var(--cs-ink); }
+.cs .cs-dot:hover::after { content: attr(data-name); position: absolute; left: 50%; bottom: calc(100% + 8px); translate: -50% 0; padding: 3px 8px 4px; border-radius: 99px; font-size: 11.5px; font-weight: 700; white-space: nowrap; color: var(--cs-ink); background: var(--cs-paper); box-shadow: inset 0 0 0 1.3px var(--cs-ink); }
+.cs .cs-dot.on { background: var(--cs-ink); } .cs-dot .cs-postage.mine { position: absolute; left: -18px; bottom: 10px; pointer-events: none; } .cs-dot .cs-postage.mine > span { height: 48px; }
+.cs-near-done { position: absolute; z-index: 6; left: 16px; right: 16px; bottom: 16px; height: 50px; }
+/* "When works?": a few times on the plan's day, one press each; the poster's own card lights the one most marked and sends it. */
+.cs-when { display: grid; gap: 8px; margin-top: 10px; padding: 11px 12px 12px; border-radius: 14px; background: var(--cs-page); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+.cs-when > b { font-size: 14px; font-weight: 760; } .cs-when > b small { margin-left: 6px; font-size: 12px; font-weight: 540; color: var(--cs-mute); }
+.cs-when .times { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.cs .cs-when .t { display: grid; justify-items: center; align-content: center; gap: 3px; height: 54px; border-radius: 12px; font-size: 14px; font-weight: 740; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+.cs .cs-when .t:hover { background: var(--cs-field); } .cs .cs-when .t[aria-pressed=true] { background: var(--cs-field); box-shadow: inset 0 0 0 2.5px var(--cs-ink); }
+.cs .cs-when .t.best { background: var(--cs-field-shadow); } .cs .cs-when .t.pick { color: var(--cs-field); background: var(--cs-ink); }
+.cs-when .mini { display: flex; height: 16px; } .cs-when .mini .cs-face { width: 16px; height: 16px; } .cs-when .mini > * + * { margin-left: -4px; } .cs-when .mini em { font-style: normal; font-size: 11px; font-weight: 600; color: var(--cs-mute); }
+.cs-when .send { display: flex; align-items: center; gap: 8px; } .cs-when .send .cs-note { flex: 1; }
+.cs-sent { margin-top: 10px; padding: 10px 12px; border-radius: 14px; font-size: 13.5px; line-height: 1.3; background: var(--cs-field); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }

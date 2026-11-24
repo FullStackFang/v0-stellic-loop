@@ -32,7 +32,18 @@ export type Ticket = {
   stub: Stub; how: string | null;
   /** People the viewer knows who are going, for the panel. */
   known: (Face & { why: string })[];
-  mine: null | { token: string; registered: boolean; here: boolean; members: Face[]; choices: Choice[]; canLeave: boolean; canEdit: boolean };
+  mine: null | { token: string; registered: boolean; here: boolean; members: Face[]; choices: Choice[]; canLeave: boolean; canEdit: boolean; /** Its poster may take it back until it ends. */ canCancel: boolean };
+  /** Whether a person posted it (People in the source bar), and their face for its map stamp; null for a signed-out visitor. */
+  member: boolean; byFace: Face | null;
+  /** A plan whose time is not set: the times offered on its day, who marked each, and whether the viewer is its poster. */
+  timeOpen: null | { day: string; poster: boolean; times: { at: string; label: string; count: number; mine: boolean; faces: Face[] }[]; answered: number; of: number };
+  /** For the people in it, after the poster sent the time: "<poster> set it: Tue at 7am." */
+  setBy: string | null;
+  /**
+   * A deal's day (openspec campus-deals, design D6): the line students see, the group size, and when it ends. Its place
+   * is `map`. The week list shows it only to someone standing in that place's section; the note never reaches here.
+   */
+  deal: { line: string; need: number; until: string | null } | null;
   /** The one next step. `join` is the share link's. `register` opens the panel, where "Register me" is. */
   action: 'in' | 'register' | 'join' | 'checkin' | 'use' | null;
   status: string | null;
@@ -58,4 +69,7 @@ export type Screen = {
   viewer: Viewer | null; tickets: Ticket[]; earning: Coupon[]; live: Live | null;
   /** The tags people on this campus are using, by group, the busiest first: what posting is guided by. Empty for a signed-out visitor. */
   places: NearTag[];
+  /** Where a plan may meet, on a campus that requires places (openspec campus-plan-place-and-time): every place, with its @name and how many plans used it. Empty elsewhere. */
+  spots: Spot[];
 };
+export type Spot = { name: string; tag: string; kind: 'food' | 'park' | 'sport' | 'building'; lat: number; lon: number; used: number };

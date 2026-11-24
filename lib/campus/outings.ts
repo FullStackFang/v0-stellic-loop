@@ -130,11 +130,12 @@ export const NEAR = 150, ROUGH = 100;
  */
 export async function checkIn(db: Db, personId: string, listingId: string, now: Date = new Date(), at: Spot | null = null): Promise<{ at: string }> {
   return db.tx(async q => {
-    const { rows: [row] } = await q.query<{ outingId: string; startsAt: string; endsAt: string | null; placeName: string | null; lat: number | null; lon: number | null; here: boolean }>(
-      `select m.outing_id as "outingId",l.starts_at as "startsAt",l.ends_at as "endsAt",p.name as "placeName",p.lat,p.lon,m.checked_in_at is not null as here
+    const { rows: [row] } = await q.query<{ outingId: string; startsAt: string; endsAt: string | null; placeName: string | null; lat: number | null; lon: number | null; here: boolean; timeOpen: boolean }>(
+      `select m.outing_id as "outingId",l.time_open as "timeOpen",l.starts_at as "startsAt",l.ends_at as "endsAt",p.name as "placeName",p.lat,p.lon,m.checked_in_at is not null as here
       from campus_outing_member m join campus_listing l on l.id=m.listing_id left join campus_place p on p.id=l.place_id
       where m.listing_id=$1 and m.person_id=$2 and l.cancelled_at is null for update of m`, [listingId, personId]);
     if (!row) throw new CampusError('Say you are in before checking in.');
+    if (row.timeOpen) throw new CampusError('Checking in opens once the plan has its time.');
     if (!checkInOpen(row.startsAt, row.endsAt, now)) throw new CampusError('Checking in opens 30 minutes before the start and closes when the event ends.');
     if (!row.here && row.placeName !== null && row.lat !== null && row.lon !== null) {
       if (!at || !Number.isFinite(at.lat) || !Number.isFinite(at.lon)) throw new CampusError(`Turn on location to check in: it only checks that you are at ${row.placeName}.`);

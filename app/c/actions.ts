@@ -12,7 +12,7 @@ import { customFace } from '@/lib/campus/animals';
 import { keepPicture, makeCustomFace, makeFromBase, retryCustomFace, useCustomFace } from '@/lib/campus/custom-face';
 import { planOf as inkPlan } from '@/lib/campus/ink';
 import { pickFace, placeAt } from '@/lib/campus/people';
-import { cancelPlan, changePlan, postPlan, readPlanLink, type LinkFill, type PlanInput } from '@/lib/campus/plans';
+import { cancelPlan, changePlan, pickTime, postPlan, readPlanLink, setTime, type LinkFill, type PlanInput } from '@/lib/campus/plans';
 import { useBuildingReward as markBuildingUsed, useGroupReward as markGroupUsed } from '@/lib/campus/rewards';
 import { setSchools } from '@/lib/campus/linkedin';
 import { linkedinAccount } from '@/lib/campus/linkedin-account';
@@ -185,11 +185,23 @@ export async function postLineAction(slug: string, text: string, from: LineFrom 
     const read = readLine(String(text).slice(0, 400), campus.tz, new Date()), page = from && typeof from === 'object' ? from : null;
     const title = read.title || String(page?.title ?? ''), starts = read.starts ?? (page?.starts ? String(page.starts) : null);
     if (!title.trim()) throw new CampusError('What is it? Say dumplings, a run, a study group.');
-    if (!starts) throw new CampusError('When is it? Say tonight, tomorrow 7pm, sat 10am.');
+    // With no hour said, the plan is for the day the line names, its time settled later (openspec campus-plan-place-and-time).
     // The page's end only goes with the page's start.
-    await postPlan(db(), viewer.personId, campus, { title, starts, ends: read.starts ? null : page?.ends ? String(page.ends) : null, place: page?.place ? String(page.place) : null,
+    await postPlan(db(), viewer.personId, campus, { title, starts, day: starts ? null : read.day, ends: read.starts ? null : page?.ends ? String(page.ends) : null, place: page?.place ? String(page.place) : null,
       about: page?.about ? String(page.about) : null, link: page?.link ? String(page.link) : read.link, tags: read.tags });
   });
+}
+/** "When works for you?": marks or unmarks one of the times offered on a plan whose time is not set. */
+export async function pickTimeAction(listingId: string, at: string): Promise<ActResult> {
+  return act(async viewer => { await onMyCampus(viewer, String(listingId)); await pickTime(db(), viewer.personId, String(listingId), String(at)); });
+}
+/** "Send <time>": the poster (or the admin) sets the time of a plan whose time is not set. */
+export async function setTimeAction(listingId: string, at: string): Promise<ActResult> {
+  return act(async viewer => { await onMyCampus(viewer, String(listingId)); await setTime(db(), { personId: viewer.personId, admin: viewer.admin }, String(listingId), String(at)); });
+}
+/** "Cancel this plan": its poster takes it back, until it ends. It leaves the list for everyone. */
+export async function cancelPlanAction(listingId: string): Promise<ActResult> {
+  return act(async viewer => { await onMyCampus(viewer, String(listingId)); await cancelPlan(db(), { personId: viewer.personId, admin: viewer.admin }, String(listingId)); });
 }
 /** Posts a plan from the post form, then returns to the screen. A link the list already has counts the person in on that plan. */
 export async function postPlanAction(_previous: PlanState, data: FormData): Promise<PlanState> {

@@ -7,6 +7,7 @@ import { setAnimalName, setBuiltTier, setPictureTier } from '@/lib/campus/animal
 import { MASCOT } from '@/lib/campus/animals';
 import { decideClubClaim } from '@/lib/campus/club-claim';
 import { deletePicture } from '@/lib/campus/custom-face';
+import { saveDeal, setDealHidden } from '@/lib/campus/deals';
 import { readFeeds } from '@/lib/campus/import';
 import { approveLinkedin, removeLinkedin } from '@/lib/campus/linkedin';
 import { removeAskedSchool } from '@/lib/campus/school-ask';
@@ -186,4 +187,21 @@ export async function saveRewardAction(data: FormData): Promise<void> {
 }
 export async function setRewardHiddenAction(data: FormData): Promise<void> {
   await admin(data, async () => { const hidden = text(data, 'hidden') === 'true'; await setRewardHidden(db(), uuid(text(data, 'reward')), hidden); return hidden ? 'Reward hidden. What was already used stays used.' : 'Reward showing again.'; });
+}
+
+/**
+ * The Deals tab's forms (app/c/admin/deal-form.tsx, openspec campus-deals). They stay on the page and are told what
+ * happened. `step` is the pressed button: "hide" or "show" on a listed deal, else Save.
+ */
+export async function dealAction(data: FormData): Promise<string> {
+  return (await step(data, async campus => {
+    const id = uuid(text(data, 'deal')), pressed = text(data, 'step');
+    if (pressed === 'hide' || pressed === 'show') {
+      await setDealHidden(db(), campus.id, id, pressed === 'hide');
+      return pressed === 'hide' ? 'Hidden. Today’s activity is off the campus page, and no more days are made.' : 'Showing again. Its days are made as before.';
+    }
+    await saveDeal(db(), { campusId: campus.id, id: id || undefined, placeId: uuid(text(data, 'place')), title: text(data, 'title'), line: text(data, 'line'),
+      headCount: number(text(data, 'size')), days: data.getAll('day').map(day => Number(day)), from: text(data, 'from'), until: text(data, 'until'), note: text(data, 'note') });
+    return id ? 'Saved. Today’s activity takes the new name and line; new hours and size start tomorrow.' : 'Saved. Each day it runs, its activity shows on the campus page during its hours.';
+  })).said;
 }

@@ -9,6 +9,8 @@ export type LineRead = {
   title: string;
   /** The start on the campus's clock ('YYYY-MM-DDTHH:mm'), or null when the line names no time. */
   starts: string | null;
+  /** The day it is on ('YYYY-MM-DD', campus clock): the start's day, else the day or date the line names, else today. */
+  day: string;
   /** The first of `tags`, or null. */
   tag: string | null;
   /** The @tags in the order typed, without the @, in lower case: a place, an activity, an event (openspec loop-campus-tags). */
@@ -37,8 +39,8 @@ const plusDays = (date: string, days: number) => new Date(Date.parse(`${date}T00
 
 /** Reads a typed line. Pure: the same text, timezone and moment always give the same answer. */
 export function readLine(text: string, tz: string, now: Date): LineRead {
-  const { title, starts, tag, tags, link } = scan(text, tz, now);
-  return { title, starts, tag, tags, link };
+  const { title, starts, day, tag, tags, link } = scan(text, tz, now);
+  return { title, starts, day, tag, tags, link };
 }
 /**
  * Reads a line that is due, not held: "upload your W8 by friday @emba-council" (openspec loop-on-you). Its time is the one it
@@ -118,8 +120,27 @@ function scan(text: string, tz: string, now: Date): LineRead & { named: boolean 
     // A calendar date says the day outright; a day word beside it changes nothing.
     starts = `${date ?? plusDays(today.date, ahead)}T${two(h)}:${two(minute)}`;
   }
+  // A day said with no hour (openspec campus-plan-place-and-time, design D2): a weekday is the next one, today included.
+  const on = starts?.slice(0, 10) ?? date ?? (day === 'tomorrow' || day === 'tmrw' ? plusDays(today.date, 1)
+    : day && day !== 'today' && day !== 'tonight' ? plusDays(today.date, (DAYS.indexOf(day.slice(0, 3)) - DAYS.indexOf(today.weekday.toLowerCase()) + 7) % 7) : today.date);
   const title = rest.replace(/\s+/g, ' ').trim().replace(/^[\s,.;:-]+|[\s,;:-]+$/g, '');
-  return { title: title ? title[0].toUpperCase() + title.slice(1) : '', starts, tag, tags, link, named };
+  return { title: title ? title[0].toUpperCase() + title.slice(1) : '', starts, day: on, tag, tags, link, named };
+}
+
+/** The times "When works?" offers on a plan's day (design D6), as 'HH:mm'. */
+export const TIMES = ['07:00', '09:00', '12:00', '17:00', '19:00'];
+/** Of `TIMES`, those still on offer for a plan on `day`: all of them on a later day, today only those 30 minutes or more ahead. */
+export function offeredTimes(day: string, tz: string, now: Date): string[] {
+  const today = localParts(tz, now);
+  if (day > today.date) return [...TIMES];
+  if (day < today.date) return [];
+  const soonest = today.hour * 60 + today.minute + 30;
+  return TIMES.filter(at => Number(at.slice(0, 2)) * 60 + Number(at.slice(3)) >= soonest);
+}
+/** "7am", "12pm", "5:30pm" for an 'HH:mm'. */
+export function clockLabel(at: string): string {
+  const h = Number(at.slice(0, 2)), m = at.slice(3, 5);
+  return `${h % 12 || 12}${m === '00' ? '' : `:${m}`}${h < 12 ? 'am' : 'pm'}`;
 }
 
 /**

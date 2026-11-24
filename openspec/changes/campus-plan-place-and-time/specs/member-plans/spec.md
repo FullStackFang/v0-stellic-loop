@@ -45,3 +45,16 @@ A person SHALL have at most three upcoming plans at once. A plan whose time is n
 #### Scenario: One of them has no time yet
 - **WHEN** a person has two plans with times and one for today with no time, and posts another
 - **THEN** the system refuses
+
+## ADDED Requirements
+
+### Requirement: Cancelling a plan
+The poster SHALL be able to cancel their plan from its details at any time until it ends, whether or not it has started and whether or not others are in; a second press SHALL confirm it. A cancelled plan SHALL leave the list and the map for everyone. Changing a plan stays open only until it starts (through its day while its time is not set). In place of "Leave", the poster SHALL see "Cancel this plan".
+
+#### Scenario: Started, nobody else in
+- **WHEN** a poster opens the details of their plan that started ten minutes ago and presses "Cancel this plan", then "Yes, cancel it"
+- **THEN** the plan is no longer in the list or on the map
+
+#### Scenario: Over
+- **WHEN** a plan has ended
+- **THEN** it can no longer be cancelled

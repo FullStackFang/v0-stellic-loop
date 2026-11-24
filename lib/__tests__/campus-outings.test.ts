@@ -298,7 +298,7 @@ describe('posting a plan',()=>{
   await cancelPlan(t.db,{personId:a,admin:false},plan.id,NOW);
   expect(await weekListings(t.db,campus,NOW)).toEqual([]);
  });
- it('refuses anyone else, and the poster once it has started; the admin still can',async()=>{
+ it('refuses anyone else; the poster can no longer change it once it has started, nor cancel it once it is over; the admin still can',async()=>{
   const campus=await cornell(),[a,b]=[await person('Ana'),await person('Sam')];
   const plan=await postPlan(t.db,a,campus,{title:'Running',starts:local('18','17:00')},NOW),change={title:'Mine now',starts:local('18','18:00')};
   await refusal(changePlan(t.db,{personId:b,admin:false},plan.id,change,NOW));
@@ -306,7 +306,7 @@ describe('posting a plan',()=>{
   expect(await editablePlan(t.db,{personId:b,admin:false},plan.id,NOW)).toBeNull();
   const started=new Date('2026-11-18T22:30:00Z');
   await refusal(changePlan(t.db,{personId:a,admin:false},plan.id,{title:'Late',starts:local('19','18:00')},started));
-  await refusal(cancelPlan(t.db,{personId:a,admin:false},plan.id,started));
+  await refusal(cancelPlan(t.db,{personId:a,admin:false},plan.id,new Date('2026-11-19T00:30:00Z')));
   await cancelPlan(t.db,{personId:b,admin:true},plan.id,started);
   // An event the admin entered by hand is not a plan, and nobody changes it this way.
   const byHand=await event();

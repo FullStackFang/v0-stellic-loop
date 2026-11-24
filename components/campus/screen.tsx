@@ -4,16 +4,16 @@ import Link from 'next/link';
 import { SignInHere, type Door } from './sign-in-here';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useOptimistic, useRef, useState, useSyncExternalStore, useTransition, type ReactNode } from 'react';
 import { flushSync } from 'react-dom';
-import { changeCampusAction, checkInAction, faceAction, imInAction, inviteAction, joinAction, leaveAction, ownFaceAction, useCouponAction as markCouponUsed, useRewardAction as markRewardUsed, type ActResult } from '@/app/c/actions';
+import { changeCampusAction, checkInAction, faceAction, cancelPlanAction, imInAction, inviteAction, pickTimeAction, setTimeAction, joinAction, leaveAction, ownFaceAction, useCouponAction as markCouponUsed, useRewardAction as markRewardUsed, type ActResult } from '@/app/c/actions';
 import type { BarGroup } from '@/lib/campus/bar-groups';
 import { GroupLinks, TopBar } from './top-bar';
 import { animal, CUSTOM, NAMES, PHOTO } from '@/lib/campus/animals';
 import { LEVELS } from '@/lib/campus/levels';
 import { Kits } from './kit';
 import { meant, pick, type Findable } from '@/lib/campus/search';
-import { isSolo, landOf, rides, sectionAt, walkMinutes, type Point } from '@/lib/campus/sections';
+import { isSolo, landOf, rides, sectionAt, walkMinutes, type Point, type Section } from '@/lib/campus/sections';
 import type { SwapCampus } from './swap';
-import { Composer, type Soon } from './composer';
+import { Composer, type Picking, type Soon } from './composer';
 import { Near } from './near';
 import { AddSchools } from './add-schools';
 import { OwnFace } from './own-face';
@@ -45,6 +45,22 @@ const whereNow = () => new Promise<{ lat: number; lon: number; accuracy: number 
   if (typeof navigator === 'undefined' || !navigator.geolocation) return done(null);
   navigator.geolocation.getCurrentPosition(({ coords }) => done({ lat: coords.latitude, lon: coords.longitude, accuracy: coords.accuracy }), () => done(null), { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 });
 });
+/**
+ * The section the person stands in, read only when the browser already allows location: this never asks
+ * (openspec campus-deals, design D4). Null until known, and when it is not allowed, so a deal waits rather than pops in and out.
+ */
+function useStandingIn(land: Section[] | null, wanted: boolean): string | null {
+  const [standing, setStanding] = useState<string | null>(null);
+  useEffect(() => {
+    if (!wanted || !land || typeof navigator === 'undefined' || !navigator.permissions?.query || !navigator.geolocation) return;
+    let live = true;
+    navigator.permissions.query({ name: 'geolocation' }).then(state => {
+      if (live && state.state === 'granted') navigator.geolocation.getCurrentPosition(({ coords }) => { if (live) setStanding(sectionAt(land, [coords.longitude, coords.latitude])?.id ?? null); }, () => {}, { maximumAge: 60000, timeout: 10000 });
+    }, () => {});
+    return () => { live = false; };
+  }, [land, wanted]);
+  return standing;
+}
 function glide(change: () => void) {
   const still = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (still || typeof document.startViewTransition !== 'function') change(); else document.startViewTransition(() => flushSync(change));
@@ -63,7 +79,7 @@ export function FaceDot({ face, className = '' }: { face: Face; className?: stri
   return face.plan !== 'free' ? <span className="cs-inked"><InkBlot seed={`${face.first}${face.photo ?? ''}`} />{dot}{face.plan === 'plus' && <InkSparks />}</span> : dot;
 }
 const Stack = ({ faces }: { faces: Face[] }) => faces.length ? <span className="cs-stack">{faces.slice(0, 6).map((face, at) => <FaceDot key={at} face={face} />)}</span> : null;
-export const Tile = ({ top, big, met = false }: { top: string; big: string; met?: boolean }) => <span className={`cs-tile ${met ? 'met' : ''}`}><small>{top}</small><b>{big}</b></span>;
+export const Tile = ({ top, big, met = false, open = false }: { top: string; big: string; met?: boolean; /** A plan whose time is not set: "?" in red. */ open?: boolean }) => <span className={`cs-tile ${met ? 'met' : ''} ${open ? 'open' : ''}`}><small>{top}</small><b>{big}</b></span>;
 /** One wedge per step needed; a wedge lights for each step done. */
 function Gauge({ have, need }: { have: number; need: number }) {
   const around = 2 * Math.PI * 12, part = around / need, gap = need > 1 ? 2.2 : 0;
@@ -87,7 +103,7 @@ export type ScreenProps = { screen: Screen; /** The person's groups, for the top
 
 export function CampusScreen({ screen, groups, signInHref, door, openId = null, signOut = null, onYou = null, swap }: ScreenProps) {
   const { campus, viewer, tickets, earning, live } = screen;
-  const [typed, setTyped] = useState(''), [view, setView] = useState<'best' | 'all' | 'near'>('best');
+  const [typed, setTyped] = useState(''), [view, setView] = useState<'best' | 'people' | 'all' | 'near'>('best');
   const [open, setOpen] = useState<{ id: string; pane: Pane; fresh: boolean } | null>(openId ? { id: openId, pane: 'more', fresh: false } : null);
   const [entering, setEntering] = useState(false), [message, setMessage] = useState(''), [copied, setCopied] = useState(false), [showing, setShowing] = useState<string | null>(null);
   const [busy, start] = useTransition(), [posting, setPosting] = useState(false);
@@ -100,7 +116,17 @@ export function CampusScreen({ screen, groups, signInHref, door, openId = null, 
   // Wide: the ticket that is on, on the map and in the list. Not chosen yet, or no longer in the list, it is the first one with a spot; `null` is "none", by choice.
   const [sel, setSel] = useState<string | null | undefined>(undefined), [hot, setHot] = useState<string | null>(null), [you, setYou] = useState<Point | null>(null);
   const srcs = useRef<HTMLDivElement>(null);
-  const picked = useMemo(() => pick(tickets.map((ticket): Findable => ({ id: ticket.id, title: ticket.title, host: ticket.by, place: ticket.place, source: ticket.source, words: ticket.words, pull: ticket.pull })), typed, view === 'all' ? 'all' : 'best', campus.listSource), [tickets, typed, view, campus.listSource]);
+  // "People" is the plans people posted, alone, in the list and on the map (openspec campus-plan-place-and-time, design D7).
+  const only = view === 'people';
+  const picked = useMemo(() => pick(tickets.filter(ticket => !only || ticket.member).map((ticket): Findable => ({ id: ticket.id, title: ticket.title, host: ticket.by, place: ticket.place, source: ticket.source, words: ticket.words, pull: ticket.pull })), typed, view === 'all' ? 'all' : 'best', campus.listSource), [tickets, typed, view, only, campus.listSource]);
+  // While posting where places are required: what the panel has picked and shows, and a dot pressed on the map.
+  const [picking, setPicking] = useState<Picking>({ tag: null, shown: [] }), [mapPick, setMapPick] = useState<{ tag: string; n: number } | null>(null);
+  // The line being typed, kept while the panel moves between the list and the map on a phone.
+  const [draft, setDraft] = useState('');
+  const keep = useCallback((text: string) => setDraft(text), []);
+  // The time a poster pressed in "Pick a time", by plan, over the one most marked.
+  const [chosen, setChosen] = useState<Record<string, string | undefined>>({}), [cancelling, setCancelling] = useState<string | null>(null);
+  const pickSpot = useCallback((tag: string) => setMapPick(was => ({ tag, n: (was?.n ?? 0) + 1 })), []);
   const byId = useMemo(() => new Map(tickets.map(ticket => [ticket.id, ticket])), [tickets]);
   const shown = [...picked.best, ...picked.rest], opened = open && shown.includes(open.id) ? byId.get(open.id) ?? null : null;
   const onMap = useMemo(() => { const left = new Set([...picked.best, ...picked.rest]); return tickets.filter(ticket => ticket.map && left.has(ticket.id)); }, [tickets, picked]);
@@ -113,7 +139,11 @@ export function CampusScreen({ screen, groups, signInHref, door, openId = null, 
   const follow = wide && !!land && rides(land) && !!seeing, sectionOf = (id: string) => { const spot = byId.get(id)?.map; return spot && land ? sectionAt(land, [spot.lon, spot.lat])?.id ?? null : null; };
   const atHome = !!seeing && (seeing.view === seeing.standing || isSolo(seeing.view));
   const inSight = (id: string) => !follow || (sectionOf(id) ?? (atHome ? seeing!.standing : null)) === (atHome ? seeing!.standing : seeing!.view);
-  const listBest = picked.best.filter(inSight), listRest = picked.rest.filter(inSight);
+  // A deal is in the week list only for someone standing in its section (openspec campus-deals, design D4). The map shows it in its section to anyone.
+  const standing = useStandingIn(land, useMemo(() => tickets.some(ticket => ticket.deal), [tickets]));
+  const nearDeal = (id: string) => !byId.get(id)?.deal || (!!standing && sectionOf(id) === standing);
+  const listBest = picked.best.filter(id => inSight(id) && nearDeal(id)), listRest = picked.rest.filter(id => inSight(id) && nearDeal(id));
+  const rowBest = picked.best.filter(nearDeal), rowRest = picked.rest.filter(nearDeal), none = picked.nothing || (!rowBest.length && !rowRest.length);
   const seenName = follow ? land!.find(each => each.id === (atHome ? seeing!.standing : seeing!.view))?.name ?? '' : '';
   // Until the map has said which section it shows, New York lights nothing, so the map is not pulled next door before it starts.
   const pool = wide && land && rides(land) ? follow ? [...listBest, ...listRest] : [] : shown;
@@ -165,7 +195,7 @@ export function CampusScreen({ screen, groups, signInHref, door, openId = null, 
     if (flipped === `in ${ticket.id}` || flipped === `join ${ticket.id}`) return <span className="cs-pill hot">You&rsquo;re in</span>;
     if (!viewer) return ticket.action ? <Link className="cs-btn sm go" href={signInHref}>{ticket.action === 'register' ? 'Register' : ticket.action === 'join' ? 'Join' : "I'm in"}</Link> : null;
     switch (ticket.action) {
-      case 'in': return <button className="cs-btn sm go" disabled={busy} aria-busy={busy && pressed === `in ${ticket.id}`} onClick={() => run(`in ${ticket.id}`, () => imInAction(ticket.id), () => setOpen({ id: ticket.id, pane: 'invite', fresh: true }), true)}>I&rsquo;m in</button>;
+      case 'in': return <button className="cs-btn sm go" disabled={busy} aria-busy={busy && pressed === `in ${ticket.id}`} onClick={() => run(`in ${ticket.id}`, () => imInAction(ticket.id), ticket.timeOpen ? undefined : () => setOpen({ id: ticket.id, pane: 'invite', fresh: true }), true)}>I&rsquo;m in</button>;
       case 'join': return <button className="cs-btn sm go" disabled={busy} aria-busy={busy && pressed === `join ${ticket.id}`} onClick={() => run(`join ${ticket.id}`, () => joinAction(ticket.joinToken!), undefined, true)}>Join</button>;
       case 'register': return <button className="cs-btn sm go" onClick={() => setOpen({ id: ticket.id, pane: 'more', fresh: open?.id !== ticket.id })}>Register</button>;
       case 'checkin': return <button className="cs-btn sm go" disabled={busy} aria-busy={busy && pressed === `checkin ${ticket.id}`} onClick={() => run(`checkin ${ticket.id}`, async () => checkInAction(ticket.id, ticket.map ? await whereNow() : null))}>{say(`checkin ${ticket.id}`, 'Check in')}</button>;
@@ -177,9 +207,29 @@ export function CampusScreen({ screen, groups, signInHref, door, openId = null, 
   const stub = (ticket: Ticket) => {
     const { stub: deal } = ticket, inviting = open?.id === ticket.id && open.pane === 'invite';
     const act = <span className="cs-act">{viewer && ticket.mine && !ticket.status?.startsWith('Used') && <button className="cs-btn sm" aria-expanded={inviting} onClick={() => show(ticket.id, 'invite')}>{inviting ? 'Close' : 'Invite'}</button>}{action(ticket)}</span>;
-    if (deal.kind === 'group') return <div className={`cs-mech ${deal.state === 'met' ? 'met' : deal.state === 'near' ? 'near' : ''}`}><Seats seats={deal.seats} /><div className="cs-what"><small>Group reward from {deal.giver}</small><b>{deal.text}</b><span>Group of {deal.need} · {deal.say}</span></div>{act}</div>;
+    // A deal's card already says what it is and who gives it, above (design D6): the stub keeps only the seats and where they stand.
+    if (deal.kind === 'group') return <div className={`cs-mech ${deal.state === 'met' ? 'met' : deal.state === 'near' ? 'near' : ''}`}><Seats seats={deal.seats} /><div className="cs-what">{!ticket.deal && <><small>Group reward from {deal.giver}</small><b>{deal.text}</b></>}<span>Group of {deal.need} · {deal.say}</span></div>{act}</div>;
     if (deal.kind === 'building') return <div className="cs-mech"><span className="cs-pips" role="img" aria-label={`${deal.done} of ${deal.need}`}>{Array.from({ length: deal.need }, (_, at) => <i key={at} className={at < deal.done ? 'lit' : at === deal.done ? 'next' : ''} />)}</span><div className="cs-what"><small>Builds with activity, from {deal.giver}</small><b>{deal.text}</b><span>{deal.say}</span></div><Stack faces={deal.faces} />{act}</div>;
     return <div className="cs-mech none"><Stack faces={deal.faces} /><div className="cs-what"><span>{deal.say}</span></div>{act}</div>;
+  };
+
+  /**
+   * "When works?" on a plan posted with no time (public/demo/mockups-map-time.html). People in it mark the times that work,
+   * one press each; its poster sees who marked which, the time most marked lit, and sends one. Nothing is set until they do.
+   */
+  const when = (ticket: Ticket) => {
+    const open = ticket.timeOpen!, top = Math.max(0, ...open.times.map(time => time.count));
+    const lit = chosen[ticket.id] ?? (top ? open.times.find(time => time.count === top)!.at : null), label = open.times.find(time => time.at === lit)?.label ?? '';
+    const mini = (faces: Face[], count: number) => <span className="mini">{faces.length ? faces.slice(0, 3).map((face, n) => <FaceDot key={n} face={face} />) : <em>{count ? count : 'nobody'}</em>}</span>;
+    if (!open.times.length) return <p className="cs-sent">{open.poster ? 'No time is left today. Change this plan to give it one.' : 'No time is left to pick today.'}</p>;
+    return <div className="cs-when">
+      <b>{open.poster ? 'Pick a time' : 'When works for you?'}<small>{open.poster ? `${open.answered} of ${open.of} have answered` : `${ticket.day} · ${ticket.by?.replace('Posted by ', '') ?? 'The poster'} picks once people answer`}</small></b>
+      <div className="times">{open.times.map(time => open.poster
+        ? <button key={time.at} className={`t ${time.at === lit ? (chosen[ticket.id] ? 'pick' : 'best') : ''}`} aria-pressed={time.at === lit} onClick={() => setChosen(was => ({ ...was, [ticket.id]: was[ticket.id] === time.at ? undefined : time.at }))}>{time.label}{mini(time.faces, time.count)}</button>
+        : <button key={time.at} className="t" aria-pressed={time.mine} disabled={busy} onClick={() => run(`time ${ticket.id}`, () => pickTimeAction(ticket.id, time.at))}>{time.label}{mini(time.faces, time.count)}</button>)}</div>
+      {open.poster && <div className="send"><span className="cs-note">{lit ? `${(open.times.find(time => time.at === lit)?.count ?? 0) + 1} of ${open.of + 1} can make ${label}, you included.` : 'Nobody has answered yet.'}</span>
+        <button className="cs-btn sm go" disabled={busy || !lit} onClick={() => run(`send ${ticket.id}`, () => setTimeAction(ticket.id, lit!))}>{say(`send ${ticket.id}`, `Send ${label}`.trim())}</button></div>}
+    </div>;
   };
 
   const card = (ticket: Ticket, at: number) => {
@@ -188,10 +238,13 @@ export function CampusScreen({ screen, groups, signInHref, door, openId = null, 
     return <article key={ticket.id} data-id={ticket.id} className={`cs-ev ${isOpen ? 'open' : ''} ${lit === ticket.id ? 'sel' : ''} ${wide && hot === ticket.id ? 'hov' : ''}`} style={{ '--i': at, ...(wide && { viewTransitionName: `ev-${ticket.id.replace(/[^a-zA-Z0-9_-]/g, '')}` }) } as React.CSSProperties}
       onMouseEnter={wide ? () => setHot(ticket.id) : undefined} onMouseLeave={wide ? () => setHot(null) : undefined}
       onClick={event => { if ((event.target as HTMLElement).closest('button, a, input')) return; if (wide) setSel(ticket.id); else show(ticket.id, 'more'); }}>
-      <div className="cs-top"><Tile top={ticket.day} big={ticket.time} met={ticket.stub.kind === 'group' && ticket.stub.state === 'met'} />
-        <div className="cs-body"><h3>{ticket.title}</h3><p>{ticket.source && <span className="cs-pill src">{ticket.source}</span>}{ticket.tags.map(tag => <b key={tag} className="cs-at">@{tag}</b>)}{[ticket.by, ticket.place].filter(Boolean).join(' · ')}</p></div>
+      <div className="cs-top"><Tile top={ticket.day} big={ticket.time} open={!!ticket.timeOpen} met={ticket.stub.kind === 'group' && ticket.stub.state === 'met'} />
+        {/* A deal leads with the deal (public/demo/mockups-campus-deals-real.html): its line, then who it is for and until when, then the place alone. */}
+        <div className="cs-body"><h3>{ticket.title}</h3>{ticket.deal && <div className="cs-deal"><strong>{ticket.deal.line}</strong><span><b>Deal · {ticket.deal.need}+ of you</b>{ticket.deal.until}</span></div>}
+          <p>{ticket.source && <span className="cs-pill src">{ticket.source}</span>}{ticket.tags.map(tag => <b key={tag} className="cs-at">@{tag}</b>)}{(ticket.deal ? [ticket.place] : [ticket.by, ticket.place]).filter(Boolean).join(' · ')}</p></div>
         {spot && <span className="cs-walk"><Pin />{!drawn(ticket.map) ? 'Off the map' : you ? `${walkMinutes(you, spot)} min walk` : 'On the map'}</span>}
         <button className="cs-more" aria-expanded={details} aria-label={details ? 'Close' : 'Details'} onClick={() => { if (wide) setSel(ticket.id); show(ticket.id, 'more'); }}><span>{details ? 'Close' : 'Details'}</span><Chevron /></button></div>
+      {ticket.mine && ticket.timeOpen && when(ticket)}{ticket.setBy && <p className="cs-sent">{ticket.setBy}</p>}
       {stub(ticket)}
     </article>;
   };
@@ -211,7 +264,10 @@ export function CampusScreen({ screen, groups, signInHref, door, openId = null, 
       <div className="cs-regact">{ticket.mine ? <>
           <small>{ticket.mine.registered ? 'You are registered, in Loopd. ' : 'You are in. '}A reward only unlocks for people who check in together, so bring them.{' '}
             {ticket.mine.canEdit && <Link className="quiet" href={`/c/${campus.slug}/post?plan=${ticket.id}`}>Change this plan</Link>}{' '}
-            {ticket.mine.canLeave && <button className="quiet" disabled={busy} aria-busy={busy && pressed === `leave ${ticket.id}`} onClick={() => run(`leave ${ticket.id}`, () => leaveAction(ticket.id))}>{say(`leave ${ticket.id}`, 'Leave', false)}</button>}</small>
+            {/* The poster takes their plan back rather than leaving it: a second press says yes, and it leaves the list for everyone. */}
+            {ticket.mine.canCancel ? <button className="quiet" disabled={busy} aria-busy={busy && pressed === `cancel ${ticket.id}`} onClick={() => cancelling === ticket.id ? run(`cancel ${ticket.id}`, () => cancelPlanAction(ticket.id), () => { setCancelling(null); setOpen(null); }) : setCancelling(ticket.id)}>
+              {say(`cancel ${ticket.id}`, cancelling === ticket.id ? (ticket.mine.members.length > 1 ? `Yes, cancel it for all ${ticket.mine.members.length}` : 'Yes, cancel it') : 'Cancel this plan', false)}</button>
+            : ticket.mine.canLeave && <button className="quiet" disabled={busy} aria-busy={busy && pressed === `leave ${ticket.id}`} onClick={() => run(`leave ${ticket.id}`, () => leaveAction(ticket.id))}>{say(`leave ${ticket.id}`, 'Leave', false)}</button>}</small>
           <button className="cs-btn go" onClick={() => show(ticket.id, 'invite')}>Invite people</button></>
         : ticket.action === 'register' ? <><small>Loopd keeps your registration here, so the people you know can see you are going. {ticket.source ?? 'The organizer'} is not told: if the event asks you to register with them, do that too.</small>
           {viewer ? <button className="cs-btn go" disabled={busy} aria-busy={busy && pressed === `in ${ticket.id}`} onClick={() => run(`in ${ticket.id}`, () => imInAction(ticket.id), () => setOpen({ id: ticket.id, pane: 'invite', fresh: false }))}>{say(`in ${ticket.id}`, 'Register me')}</button> : <Link className="cs-btn go" href={signInHref}>Register me</Link>}</>
@@ -232,7 +288,11 @@ export function CampusScreen({ screen, groups, signInHref, door, openId = null, 
     {open!.pane === 'invite' && opened.mine ? invite(opened) : more(opened)}</div>;
   const postSheet = posting && viewer && <div key="post" className="cs-sheet cs-post fresh">
     <div className="cs-sheet-top"><h3>Start something</h3><button className="cs-more" aria-expanded="true" onClick={() => setPosting(false)}>Close<Chevron /></button></div>
-    <Composer campus={campus} tags={screen.places} soon={soon} onDone={() => setPosting(false)} onReview={id => { setTyped(''); if (wide) setSel(id); show(id, 'more'); }} /></div>;
+    <Composer campus={campus} tags={screen.places} soon={soon} onDone={() => { setDraft(''); setPosting(false); }} onReview={id => { setTyped(''); if (wide) setSel(id); show(id, 'more'); }}
+      spots={screen.spots} you={you} mapPick={mapPick} onPicking={setPicking} initial={draft} onKeep={keep}
+      onMap={!wide && land && screen.spots.length ? () => { setOpen(null); setView('near'); } : undefined} /></div>;
+  // Where places are required, the map shows them as dots while posting; a dot pressed is picked as its pill would be.
+  const placing = posting && viewer && screen.spots.length ? { spots: screen.spots, shown: picking.shown, tag: picking.tag, onPick: pickSpot } : null;
   const nothing = <div className="cs-nothing"><div className="cs-nothing-top"><Tile top="This week" big="Open" /><div><h3>{typed.trim() ? 'Nothing matches' : 'Nothing here yet'}</h3><p>{typed.trim() ? 'Try another word, or post a plan of your own.' : 'Post a plan of your own and it shows here at once.'}</p></div></div>
     <div className="cs-nothing-stub"><small>Yours could be the first this week.</small></div></div>;
   const plus = <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6} strokeLinecap="round" aria-hidden="true"><path d="M12 4.5v15M4.5 12h15" /></svg>;
@@ -260,7 +320,7 @@ export function CampusScreen({ screen, groups, signInHref, door, openId = null, 
           <div className="cs-try" role="group" aria-label="Words to try" onMouseDown={event => event.preventDefault()}><small>Try</small>{SAY.map(word => <button key={word} className="cs-opt" aria-pressed={typed === word}
             onClick={event => { glide(() => search(typed === word ? '' : word)); event.currentTarget.blur(); (document.activeElement as HTMLElement | null)?.blur?.(); }}>{word}</button>)}</div></div>
         <div className="cs-srcs" ref={srcs} role="group" aria-label="Where plans are listed from">
-          {([['best', 'Best for you'], ['all', campus.listSource]] as const).map(([key, label]) => <button key={key} aria-pressed={(view === 'all' ? 'all' : 'best') === key} onClick={() => glide(() => { setView(key); setOpen(null); rail.current?.scrollTo?.({ top: 0 }); })}>{label}</button>)}
+          {([['best', 'Best for you'], ['people', 'People'], ['all', campus.listSource]] as const).map(([key, label]) => <button key={key} aria-pressed={(view === 'near' ? 'best' : view) === key} onClick={() => glide(() => { setView(key); setOpen(null); rail.current?.scrollTo?.({ top: 0 }); })}>{label}</button>)}
           {SOON.filter(name => name !== campus.listSource).map(name => <span key={name}>{name}<i>soon</i></span>)}</div>
       </div>
       {message && <p className="cs-alert" role="alert">{message}</p>}
@@ -271,14 +331,14 @@ export function CampusScreen({ screen, groups, signInHref, door, openId = null, 
             ? <b>{listBest.length + listRest.length ? `${listBest.length + listRest.length} in ${seenName}` : `Nothing in ${seenName}${typed.trim() ? ` for “${typed.trim()}”` : ' this week'}`}</b>
             : <><b>{picked.line}</b>{shown.length > 0 && <span>{onMap.length === shown.length ? 'All' : onMap.length} on the map</span>}</>}</h2></div>
           <div className="cs-scroll" ref={rail}>
-            <div className="cs-grid">{picked.nothing || (follow && !listBest.length && !listRest.length) ? nothing : <>
+            <div className="cs-grid">{picked.nothing || (!listBest.length && !listRest.length) ? nothing : <>
               {listBest.map(row)}
               {listRest.length > 0 && <div className="cs-then"><b>{follow ? listRest.length : count}</b><span>{words.join(' ')}</span></div>}
               {listRest.map((id, at) => row(id, listBest.length + 1 + at))}</>}</div>
             {shelf}
           </div>
         </div>
-        <Near beside swap={swap} land={land!} tickets={onMap} me={viewer && { first: viewer.first, photo: viewer.photo, plan: viewer.plan }} asked={meant(typed).length ? typed.trim() : ''} picked={lit} onPick={pickOnMap} hot={hot} onHover={setHot} onYou={setYou} onView={onView} />
+        <Near beside swap={swap} land={land!} tickets={onMap} me={viewer && { first: viewer.first, photo: viewer.photo, plan: viewer.plan }} asked={meant(typed).length ? typed.trim() : ''} picked={lit} onPick={pickOnMap} hot={hot} onHover={setHot} onYou={setYou} onView={onView} placing={placing} />
       </div>
     </section></main>
   </div>;
@@ -290,19 +350,19 @@ export function CampusScreen({ screen, groups, signInHref, door, openId = null, 
       <div className="cs-count"><div className="cs-tally">
         {post}
         <h2 aria-live="polite">{near ? nearLine : picked.line}</h2></div>
-        <div className="cs-tabs">{([['best', 'Best for you'], ['all', campus.listSource], ...(land ? [['near', 'Near you'] as const] : [])] as const).map(([key, label]) => <button key={key} aria-pressed={view === key} onClick={() => { setView(key); setOpen(null); setEntering(true); }}>{label}</button>)}</div>
+        <div className="cs-tabs">{([['best', 'Best for you'], ['people', 'People'], ['all', campus.listSource], ...(land ? [['near', 'Near you'] as const] : [])] as const).map(([key, label]) => <button key={key} aria-pressed={view === key} onClick={() => { setView(key); setOpen(null); setEntering(true); }}>{label}</button>)}</div>
         <div className="cs-says"><small>Try</small>{SAY.map(word => <button key={word} className="cs-opt" aria-pressed={typed === word} onClick={() => search(typed === word ? '' : word)}>{word}</button>)}</div></div>
       {message && <p className="cs-alert" role="alert">{message}</p>}
       {near ? <>{postSheet && <div className="cs-railwrap cs-near-post"><div className="cs-rail">{postSheet}</div></div>}
-        <Near swap={swap} land={land} tickets={onMap} me={viewer && { first: viewer.first, photo: viewer.photo, plan: viewer.plan }} asked={meant(typed).length ? typed.trim() : ''} picked={opened?.id ?? null} onPick={id => { setCopied(false); setPosting(false); setOpen(id ? { id, pane: 'more', fresh: true } : null); }}>
+        <Near swap={swap} land={land} tickets={onMap} me={viewer && { first: viewer.first, photo: viewer.photo, plan: viewer.plan }} asked={meant(typed).length ? typed.trim() : ''} onYou={setYou} placing={placing && { ...placing, onDone: () => setView('best') }} picked={opened?.id ?? null} onPick={id => { setCopied(false); setPosting(false); setOpen(id ? { id, pane: 'more', fresh: true } : null); }}>
           {opened && <div className="cs-rail" ref={rail}>{card(opened, 0)}{sheet}</div>}</Near></>
       : <div className={`cs-evs ${entering ? 'in' : ''}`} key={entering ? `${typed}|${view}` : 'row'}>
-        {picked.nothing ? postSheet ? <div className="cs-railwrap"><div className="cs-rail">{nothing}{postSheet}</div></div> : nothing
+        {none ? postSheet ? <div className="cs-railwrap"><div className="cs-rail">{nothing}{postSheet}</div></div> : nothing
           : <div className="cs-railwrap"><div className="cs-rail" ref={rail} onScroll={measure}>
               {postSheet}
-              {picked.best.map(row)}
-              {picked.rest.length > 0 && <div className="cs-then" style={{ '--i': picked.best.length } as React.CSSProperties}><b>{count}</b><span>{words.join(' ')}</span></div>}
-              {picked.rest.map((id, at) => row(id, picked.best.length + 1 + at))}</div>
+              {rowBest.map(row)}
+              {rowRest.length > 0 && <div className="cs-then" style={{ '--i': rowBest.length } as React.CSSProperties}><b>{count}</b><span>{words.join(' ')}</span></div>}
+              {rowRest.map((id, at) => row(id, rowBest.length + 1 + at))}</div>
             <button className="cs-rgo l" hidden={ends.left} aria-label="Earlier events" onClick={() => rail.current?.scrollBy({ left: -604, behavior: 'smooth' })}><Chevron /></button>
             <button className="cs-rgo r" hidden={ends.right} aria-label="More events" onClick={() => rail.current?.scrollBy({ left: 604, behavior: 'smooth' })}><Chevron /></button></div>}
       </div>}

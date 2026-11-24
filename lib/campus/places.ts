@@ -1,5 +1,8 @@
 import 'server-only';
 import type { Q } from '../db';
+import type { PlaceKind } from './place-tags';
+
+export { PLACE_KINDS, PLACES_REQUIRED, placeFor, placeTag, type PlaceKind } from './place-tags';
 
 // A campus's named places (design D13). An event's place text is matched to one by name, which gives the map its centre.
 
@@ -19,8 +22,9 @@ export function matchPlace<T extends PlaceName>(places: readonly T[], text: stri
   return best;
 }
 
-export async function campusPlaces(q: Q, campusId: string): Promise<(PlaceName & { lat: number; lon: number })[]> {
-  return (await q.query<PlaceName & { lat: number; lon: number }>('select id,name,other_names as "otherNames",lat,lon from campus_place where campus_id=$1 order by lower(name)', [campusId])).rows;
+export type CampusPlace = PlaceName & { lat: number; lon: number; kind: PlaceKind | null };
+export async function campusPlaces(q: Q, campusId: string): Promise<CampusPlace[]> {
+  return (await q.query<CampusPlace>('select id,name,other_names as "otherNames",lat,lon,kind from campus_place where campus_id=$1 order by lower(name)', [campusId])).rows;
 }
 
 /** Adds a place, or changes the one with `id`. Events already in the list are matched again against the new list. */

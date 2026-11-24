@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import type { GeoJSONSource, Map as GlMap, MapLibreEvent, MapMouseEvent, Marker, StyleSpecification } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { bounds, held, hops, inside, isSolo, LINE, middle, nextStops, rides, sectionAt, soloOf, stopNear, walkMinutes, wayOn, WALK_PER_MINUTE, type Point, type Section, type Stop, type Way } from '@/lib/campus/sections';
-import type { Face, Ticket } from '@/lib/campus/view';
+import type { Face, Spot as PlaceSpot, Ticket } from '@/lib/campus/view';
 import { FaceDot } from './screen';
 import { Swap, visiting, type SwapCampus } from './swap';
 import { LINE as WAIT_LINE, SeatsSmall } from '@/components/loading/seats';
@@ -182,9 +182,12 @@ export type NearProps = {
   onYou?: (at: Point | null) => void;
   /** Told which section is on screen and which one you stand in, so the list beside the map can hold what is there. */
   onView?: (view: string, standing: string) => void;
+  /** While a plan is being posted on a campus that requires places (openspec campus-plan-place-and-time, design D5):
+   *  every place of the section as a dot, the open tab's ringed, the picked one with the poster's animal standing on it. */
+  placing?: { spots: PlaceSpot[]; shown: string[]; tag: string | null; onPick: (tag: string) => void; onDone?: () => void } | null;
 };
 
-export function Near({ land, tickets, me, asked, picked, onPick, children, beside = false, hot = null, onHover, onYou, onView, swap = [] }: NearProps) {
+export function Near({ land, tickets, me, asked, picked, onPick, children, beside = false, hot = null, onHover, onYou, onView, swap = [], placing = null }: NearProps) {
   // `all` is the campus's sections and, after them, a sheet for each place off the map that has a plan.
   const { spots, all } = useMemo(() => {
     const solos = new Map<string, Section>();
@@ -222,6 +225,10 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
   // Plans at one address stand on one stamp, so no stamp is ever pushed off its spot.
   const pins = useMemo(() => typeof document === 'undefined' ? [] : [...new Set(list.map(spot => spot.at.join()))].map(key => { const same = list.filter(spot => spot.at.join() === key); return { id: key, at: same[0].at, same, el: document.createElement('div') }; }), [list]);
   const youEl = useMemo(() => you && view === standing && typeof document !== 'undefined' ? document.createElement('div') : null, [you, view, standing]);
+  // The places to meet at, while posting: the ones in the section on screen, each on a dot of its own.
+  const placeSpots = placing?.spots;
+  const dots = useMemo(() => typeof document === 'undefined' || !placeSpots ? [] : placeSpots.filter(spot => inside([spot.lon, spot.lat], here.ring))
+    .map(spot => ({ spot, at: [spot.lon, spot.lat] as Point, el: document.createElement('div') })), [placeSpots, here]);
   // In New York the ways on are a departure board, the pane's own bottom row: the map ends above it (campus.css, .rides).
   const board = useMemo(() => rides(land) ? nextStops(land, standing, view) : null, [land, standing, view]);
   useEffect(() => { onView?.(view, standing); }, [view, standing, onView]);
@@ -405,6 +412,12 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
     return () => { for (const each of made) each.remove(); };
   }, [map, pins, place]);
   useEffect(() => {
+    if (!map || !lib.current || !dots.length) return;
+    const { Marker } = lib.current;
+    const made = dots.map(dot => new Marker({ element: dot.el }).setLngLat(dot.at).addTo(map));
+    return () => { for (const each of made) each.remove(); };
+  }, [map, dots]);
+  useEffect(() => {
     if (!map || !lib.current || !you || !youEl) return;
     const marker = new lib.current.Marker({ element: youEl }).setLngLat(you).addTo(map);
     return () => { marker.remove(); };
@@ -457,8 +470,9 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
         // "Also here" turns the stamp to the next plan at this address. Anywhere else on it picks the plan, or lets go of it.
         if (next && (event.target as Element).closest('.also')) { setLitId(next.id); if (beside) onPick(next.id); return; }
         setLitId(ticket.id); onPick(picked === ticket.id ? null : ticket.id); }}>
-      <span className="cs-postage">{isLit && <svg className="cs-burst" viewBox="-55 -55 110 110" aria-hidden="true"><path d={BURST} /></svg>}{next && <i className="cs-under" />}
-        <span><svg viewBox="0 0 24 24" aria-hidden="true">{ICONS[pictureOf(ticket)]}</svg><b>{ticket.time}</b><small>{ticket.day}</small></span>{next && <i className="cs-n">{same.length}</i>}</span>
+      <span className={`cs-postage ${ticket.timeOpen ? 'open' : ''}`}>{isLit && <svg className="cs-burst" viewBox="-55 -55 110 110" aria-hidden="true"><path d={BURST} /></svg>}{next && <i className="cs-under" />}
+        {/* A plan a person posted carries their animal where a listed event carries a drawn picture. */}
+        <span>{ticket.byFace ? <FaceDot face={ticket.byFace} className="cs-by" /> : <svg viewBox="0 0 24 24" aria-hidden="true">{ICONS[pictureOf(ticket)]}</svg>}<b>{ticket.time}</b><small>{ticket.day}</small></span>{next && <i className="cs-n">{same.length}</i>}</span>
       {isLit && <Postmark town={here.name} time={ticket.time} day={ticket.day} />}
       {faces.length > 0 && <span className="cs-stack">{faces.slice(0, 3).map((face, n) => <FaceDot key={n} face={face} />)}</span>}
       {isLit && <span className="cs-bub"><span className="main"><b>{ticket.title}</b><span>{ticket.place ?? ticket.map?.name}</span>{reward && <em>{reward}</em>}<span className="in">{ticket.stub.say}</span>{next && <span className="also">Also here: {next.title}, {next.time} ›</span>}</span>
@@ -503,6 +517,10 @@ export function Near({ land, tickets, me, asked, picked, onPick, children, besid
         <Arrow /><b>{each.name}</b><i>{on[each.id] ?? 0}</i></button>)}</nav>}
     {pins.map((each, nth) => createPortal(pin(each.same, nth), each.el, each.id))}
     {youEl && createPortal(<span className="cs-you">{me ? <FaceDot face={{ ...me, me: true }} /> : <i />}<b>YOU</b></span>, youEl)}
+    {placing && dots.map(({ spot, el }) => createPortal(<button type="button" className={`cs-dot ${placing.shown.includes(spot.tag) ? 'ring' : ''} ${placing.tag === spot.tag ? 'on' : ''}`}
+      aria-label={`Meet at ${spot.name}`} aria-pressed={placing.tag === spot.tag} data-name={spot.name} onClick={() => placing.onPick(spot.tag)}>
+      {placing.tag === spot.tag && me && <span className="cs-postage mine"><span><FaceDot face={{ ...me, me: true }} className="cs-by" /></span></span>}</button>, el, spot.tag))}
+    {placing?.onDone && <button type="button" className="cs-btn go cs-near-done" onClick={placing.onDone}>Done</button>}
   </div>;
 }
 

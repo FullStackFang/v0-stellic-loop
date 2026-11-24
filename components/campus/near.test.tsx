@@ -40,12 +40,12 @@ afterEach(() => { cleanup(); maps.length = 0; vi.unstubAllGlobals(); });
 const at = (hours: number) => new Date(Date.now() + hours * 3600000).toISOString();
 function ticket(title: string, time: string, hours: number, lon: number | null, lat = 0, more: Partial<Ticket> = {}): Ticket {
   return { id: title, title, day: 'Today', mapDate: '2026-11-19', mapDay: 'Today', time, ends: null, when: at(hours), source: null, by: null, place: `${title} hall`, about: null, link: null, tags: [], map: lon === null ? null : { name: `${title} hall`, lat, lon },
-    words: [], pull: 0, going: 0, stub: { kind: 'none', say: 'Nobody is in yet', faces: [] }, how: null, known: [], mine: null, action: 'in', status: null, joinToken: null, ...more };
+    words: [], pull: 0, going: 0, stub: { kind: 'none', say: 'Nobody is in yet', faces: [] }, how: null, known: [], mine: null, action: 'in', status: null, joinToken: null, member: false, byFace: null, timeOpen: null, setBy: null, deal: null, ...more };
 }
 // Two in Collegetown, one in Central Campus, one in North Campus (two steps from Collegetown), and one with no spot.
 const week = [ticket('Study group', '3pm', 1, -76.4876, 42.4393, { words: ['study'] }), ticket('Dumpling night', '8pm', 6, -76.4852, 42.4406), ticket('Blitz night', '7pm', 5, -76.4857, 42.4466),
   ticket('Volleyball', '6pm', 4, -76.4772, 42.4531), ticket('Somewhere', '1pm', 3, null)];
-const model = (slug: string, tickets: Ticket[]): Screen => ({ campus: { slug, name: slug, tz: 'America/New_York', listSource: 'CampusGroups' }, viewer: null, tickets, earning: [], live: null, places: [] });
+const model = (slug: string, tickets: Ticket[]): Screen => ({ campus: { slug, name: slug, tz: 'America/New_York', listSource: 'CampusGroups' }, viewer: null, tickets, earning: [], live: null, places: [], spots: [] });
 /** Where the browser says the person is: a spot, or nothing when it will not say. */
 function locate(spot: [number, number] | null) {
   vi.stubGlobal('navigator', { ...navigator, geolocation: { getCurrentPosition: (found: (at: { coords: { longitude: number; latitude: number } }) => void, refused: () => void) => { if (spot) found({ coords: { longitude: spot[0], latitude: spot[1] } }); else refused(); } } });
@@ -547,4 +547,17 @@ describe('A place on its own, off the map', () => {
     expect(sheet()).toBe('Roosevelt Island');
     await waitFor(() => expect(pins()).toEqual(['Tram ride, Today 3pm', 'Market, Today 5pm']));
   });
+});
+
+// Spec: openspec/changes/campus-plan-place-and-time/specs/campus-screen, "People's plans look like people's".
+it("puts the poster's animal on a person's plan where an event has a drawn picture, and a white stamp with ? on one with no time", async () => {
+  locate(null);
+  const alex = { first: 'Alex', photo: '/animals/12.webp', plan: 'free' as const };
+  await near([ticket('Watercolor', '5pm', 1, -76.4876, 42.4393), ticket('Run', '?', 2, -76.4852, 42.4406, { member: true, byFace: alex, timeOpen: { day: '2026-11-19', poster: false, answered: 0, of: 0, times: [] } })]);
+  await waitFor(() => expect(pins()).toHaveLength(2));
+  const run = screen.getByRole('button', { name: 'Run, Today ?' }), paint = screen.getByRole('button', { name: 'Watercolor, Today 5pm' });
+  expect(within(run).getByRole('img', { name: 'Alex' })).toBeTruthy();
+  expect(run.querySelector('.cs-postage')!.classList.contains('open')).toBe(true);
+  expect(within(paint).queryByRole('img')).toBeNull();
+  expect(paint.querySelector('.cs-postage svg')).toBeTruthy();
 });

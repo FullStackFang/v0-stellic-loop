@@ -161,11 +161,9 @@ it('a line with no time is helped, not refused: times are offered to tap, and a 
     expect(within(understood()).getByText('Go for a run')).toBeInTheDocument();
     expect(within(understood()).getByText(/7pm$/)).toBeInTheDocument();
     expect(within(understood()).getByText('@central-park', { selector: '.cs-chip' })).toHaveTextContent('@central-parknew');
-    // No time at all: nothing is refused. Pressing "Post it" asks, and the offered times are one tap.
+    // No time at all: nothing is refused. The day shows with "?" (the people in it can say when works), and the offered times are one tap.
     say('go for a run @central-park ');
-    fireEvent.click(screen.getByRole('button', { name: 'Post it' }));
-    expect(screen.getByRole('status')).toHaveTextContent('When is it? Tap a time above, or type one.');
-    expect(screen.queryByRole('alert')).toBeNull();
+    expect(within(understood()).getByText('Today ?')).toBeInTheDocument();
     const offered = within(understood()).getAllByRole('button');
     expect(offered.length).toBeGreaterThan(1);
     fireEvent.click(offered[0]);
@@ -184,7 +182,7 @@ it('says what is missing instead of posting, and a link Loopd cannot read asks f
   const ana = await person('Ana Lopez');
   await withPortalTestSession(ana, async () => {
     expect(await postLineAction('cornell', '@collegetown', null)).toEqual({ ok: false, message: 'What is it? Say dumplings, a run, a study group.' });
-    expect(await postLineAction('cornell', 'dumplings @collegetown', null)).toEqual({ ok: false, message: 'When is it? Say tonight, tomorrow 7pm, sat 10am.' });
+    expect(await postLineAction('cornell', 'dumplings @collegetown on 1/1/2099', null)).toEqual({ ok: false, message: 'Plans can be up to 14 days ahead.' });
     await open(ana);
     say('https://partiful.com/e/abc123 ');
     expect(await screen.findByText('Loopd does not read partiful.com. The link is kept: say what it is and when.')).toBeInTheDocument();
