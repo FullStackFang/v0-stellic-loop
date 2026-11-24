@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { readFileSync } from 'node:fs';
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest';
 import { makePerson, openTestDb, type TestDb } from '@/test/db';
 import { createPoll, saveAnswer } from './polls';
@@ -61,4 +62,22 @@ it('always offers the campus list with its other names, opens a listed place at 
   expect(await placeSpot(t.db, maya.personId, 'City Hops')).toBeNull();
   await poll(maya, 'CTB'); await poll(maya, 'City Hops'); await poll(josh, 'city hops'); await poll(josh, 'The Nines');
   expect(await typedPlaces(t.db, cornell, NOW)).toEqual([{ name: expect.stringMatching(/^city hops$/i), people: 2 }, { name: 'The Nines', people: 1 }]);
+});
+
+it('loads the Cornell places file, twice over, without touching a place the campus already has', async () => {
+  const cornell = await campusId('cornell'), seed = readFileSync('supabase/optional-migrations/campus-places/cornell.sql', 'utf8');
+  // Places outlast the reset between tests: start from none.
+  await t.db.query('delete from campus_place where campus_id=$1', [cornell]);
+  await t.db.query("insert into campus_place(campus_id,name,other_names,lat,lon) values($1,'CTB','{Collegetown Bagels}',1,2),($1,'olin library','{}',3,4)", [cornell]);
+  await t.db.query(seed); await t.db.query(seed);
+  const rows = (await t.db.query<{ name: string; other_names: string[]; lat: number }>('select name,other_names,lat from campus_place where campus_id=$1', [cornell])).rows, named = (name: string) => rows.filter(row => row.name.toLowerCase() === name.toLowerCase());
+  expect(rows.length).toBeGreaterThan(100);
+  expect(new Set(rows.map(row => row.name.toLowerCase())).size).toBe(rows.length);
+  // Already here under another name, or in other capitals: left as it was.
+  expect(named('Collegetown Bagels')).toEqual([]);
+  expect(named('Olin Library')).toEqual([{ name: 'olin library', other_names: [], lat: 3 }]);
+  // A loaded place carries no other names, and a name with an apostrophe arrives whole.
+  expect(named('Temple of Zeus')[0].other_names).toEqual([]);
+  expect(rows.some(row => row.name.includes("'"))).toBe(true);
+  expect((await placeSpot(t.db, (await who('Maya', 'cornell')).personId, 'drinks at the big red barn'))?.name).toBe('Big Red Barn');
 });
