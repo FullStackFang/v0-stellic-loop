@@ -3,7 +3,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, expect, it, vi } from 'vite
 import { makePerson, openTestDb, type TestDb } from '@/test/db';
 import { authenticate } from '@/lib/emba/access';
 import { createWorkspace } from '@/lib/emba/workspaces';
-import { groupByRef, groupPolls, pollGroup } from './groups';
+import { groupByRef, groupPolls, groupsOfPolls, pollGroup } from './groups';
 import { createPoll, saveAnswer } from './polls';
 import { sendPoll } from './send';
 
@@ -51,7 +51,8 @@ it('lists a group\'s polls on its page: open with who has answered, then with th
 
   const forAna = await groupPolls(t.db, f.ana, f.scope), forOwner = await groupPolls(t.db, f.owner, f.scope);
   expect(forAna).toMatchObject([{ id, title: 'Pitch practice', status: 'open', answered: 2, size: 3, mine: true, chosenSlot: null }]);
-  expect(forOwner[0].mine).toBe(false);
+  expect(forOwner[0]).toMatchObject({ mine: false, isOrganizer: true, ready: false });
+  expect(forAna[0].isOrganizer).toBe(false);
   // Someone who cannot read the group is told nothing about its polls.
   expect(await groupPolls(t.db, f.outsider, f.scope)).toEqual([]);
 
@@ -63,4 +64,20 @@ it('lists a group\'s polls on its page: open with who has answered, then with th
 
   expect(await sendPoll(t.db, f.owner, { pollId: id, slot }, NOW)).toEqual({ sent: true });
   expect(await groupPolls(t.db, f.ana, f.scope)).toMatchObject([{ id, status: 'sent', chosenSlot: slot }]);
+});
+
+it('names the group of each poll in "Your polls", only to those who can read the group', async () => {
+  const f = await team();
+  const mine = await createPoll(t.db, f.owner, PLAN, NOW, f.scope), alone = await createPoll(t.db, f.owner, { ...PLAN, title: 'On its own' }, NOW);
+  const ids = [mine.id, alone.id];
+  const forAna = await groupsOfPolls(t.db, f.ana, ids);
+  expect(forAna.get(mine.id)).toMatchObject({ ref: 'study-team', name: 'Study team', href: '/groups/study-team', loopId: f.scope.loopId });
+  // A poll made on its own has no group; it is still in the list.
+  expect(forAna.has(alone.id)).toBe(true);
+  expect(forAna.get(alone.id)).toBeNull();
+  // Someone who answered from outside the group is never told its name: the poll has no entry, so no group is named.
+  const forOutsider = await groupsOfPolls(t.db, f.outsider, ids);
+  expect(forOutsider.has(mine.id)).toBe(false);
+  expect(forOutsider.get(alone.id)).toBeNull();
+  expect(await groupsOfPolls(t.db, f.ana, [])).toEqual(new Map());
 });

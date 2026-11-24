@@ -17,6 +17,7 @@ import TeamPage from './[namespace]/team/page';
 import { addTeamEvent, amendTeamRecord, announceToTeam, saveTeamBrief, takeBackTeamEvent } from './team-actions';
 import { disconnectAssistant, grantGroupRead, renewGroupRead, revokeGroupRead } from './connection-actions';
 import { joinPlan as givePlan } from '@/lib/campus/ink';
+import { createPoll } from '@/lib/when/polls';
 import { BriefForm } from '@/components/emba/brief-form';
 import ConnectionsPage from './connections/page';
 
@@ -405,4 +406,30 @@ it('keeps Assistants for Ink+: the page offers the one Get button, the grant is 
   render(await withPortalTestSession(f.ana, () => ConnectionsPage()));
   expect(screen.getByText('Team grants')).toBeInTheDocument();
   expect((await act(f.ana, () => grantGroupRead(idle, form({ clientId: 'claude-test', scope: scopeValue })))).status).toBe('success');
+});
+
+it('gives the group\'s polls a pill of their own, red while one waits on the reader, and a tab of only this group\'s polls', async () => {
+  const f = await fixture();
+  const DAY = 86_400_000, day = (ahead: number) => new Date(Date.now() + ahead * DAY).toISOString().slice(0, 10);
+  const plan = { startDate: day(5), endDate: day(6), hourStart: 17, hourEnd: 22, timezone: 'UTC', expectedSize: 3, deadline: new Date(Date.now() + 2 * DAY).toISOString(), threshold: 'majority' };
+  const { id } = await createPoll(t.db, f.ana, { ...plan, title: 'Hostel call' }, new Date(), f.scope);
+  await createPoll(t.db, f.ana, { ...plan, title: 'Not this group\'s' }, new Date());
+
+  await view(f.ben);
+  const bar = screen.getByRole('navigation', { name: 'Team sections' });
+  const pill = within(bar).getByRole('link', { name: /^Polls/ });
+  expect(pill).toHaveAttribute('href', '/groups/study-team/team?tab=polls');
+  // Ben has not given his times: the count says so in red.
+  expect(pill.querySelector('span')).toHaveTextContent('1');
+  expect(pill.querySelector('span')).toHaveClass('hot');
+  // The group never sends anyone to every poll they have.
+  expect(within(bar).queryByRole('link', { name: 'Your polls' })).toBeNull();
+  cleanup();
+
+  await view(f.ben, 'polls');
+  const open = screen.getByRole('region', { name: 'Open' });
+  expect(within(open).getByRole('link', { name: /Hostel call/ })).toHaveAttribute('href', `/when/${id}`);
+  expect(within(open).getByRole('link', { name: /Hostel call/ })).toHaveTextContent(/asked · 0 of 3 answered/);
+  expect(within(open).getByText('Add your times')).toBeInTheDocument();
+  expect(screen.queryByText('Not this group\'s')).toBeNull();
 });

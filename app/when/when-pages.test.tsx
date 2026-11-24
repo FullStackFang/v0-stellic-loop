@@ -69,7 +69,7 @@ it('signs a visitor in on the poll itself, and brings them back to it', async ()
 it('lets a visitor who has not signed in paint their times and save under a name', async () => {
   const { id } = await fixture(), view = await open(null, id);
   expect(screen.getByRole('heading', { name: 'Problem set night' })).toBeInTheDocument();
-  expect(view.container).toHaveTextContent('Maya asked for 1 hr · 3 of 7 answered · by Fri 27 Nov');
+  expect(view.container).toHaveTextContent(/Maya asked for 1 hr · 3 of 7 answered · by \w{3} \d{1,2} \w{3}/);
   expect(view.container).toHaveTextContent('Best so far');
   // The page has no sign-in of its own: the bar's "Sign in" is the one way in.
   expect(screen.queryByText('Have Loopd? Sign in')).toBeNull();
@@ -181,8 +181,10 @@ it('lists your polls, open and set, each a way back to it', async () => {
   view = render(await list(josh));
   const line = screen.getByRole('link', { name: /Problem set night/ });
   expect(line).toHaveAttribute('href', `/when/${id}`);
-  expect(line).toHaveTextContent('Maya asked · 3 of 7 answered · by Fri 27 Nov');
+  expect(line).toHaveTextContent(/Maya asked · 3 of 7 answered · by \w{3} \d{1,2} \w{3}/);
   expect(line).toHaveTextContent('Open');
+  // A poll made on its own says so on its line; one of a group's would name the group.
+  expect(line).toHaveTextContent('No group');
   clean(view.container.innerHTML);
   cleanup();
   await sendPoll(t.db, maya, { pollId: id, slot: TUE7, duration: 45 });

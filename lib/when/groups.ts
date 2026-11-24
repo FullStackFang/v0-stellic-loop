@@ -12,7 +12,8 @@ export type Scope = { orgId: string; loopId: string };
 export type PollGroup = { scope: Scope; ref: string; name: string; href: string; size: number };
 /** A group's poll as its card on the group's page shows it. */
 export type GroupPoll = { id: string; title: string; status: 'open' | 'sent'; deadline: string; chosenSlot: string | null; durationMin: number; timezone: string; organizerName: string;
-  /** How many have answered, and the group's size. */ answered: number; size: number; /** The viewer's own answer counts. */ mine: boolean };
+  /** How many have answered, and the group's size. */ answered: number; size: number; /** The viewer's own answer counts. */ mine: boolean;
+  /** The viewer made it, and it has told them a time works or its deadline passed: theirs to pick. */ isOrganizer: boolean; ready: boolean };
 
 /** The table is made by hand on the live database. Until it is, no poll has a group. */
 const absent = (error: unknown) => typeof error === 'object' && error !== null && 'code' in error && error.code === '42P01';
@@ -61,11 +62,39 @@ export async function groupPolls(db: Db, p: Principal, scope: Scope): Promise<Gr
     return await db.tx(async q => {
       if (!await canAccessLoop(q, p, scope.orgId, scope.loopId, 'read')) return [];
       return (await q.query<GroupPoll>(`select w.id,w.title,w.status,${iso('w.deadline')} as deadline,${iso('w.chosen_slot')} as "chosenSlot",w.duration_min as "durationMin",w.timezone,o.name as "organizerName",
-        n.answered,greatest(w.expected_size,n.answered) as size,exists(select 1 from when_answer a where a.poll_id=w.id and a.person_id=$3 and not a.draft) as mine
+        n.answered,greatest(w.expected_size,n.answered) as size,exists(select 1 from when_answer a where a.poll_id=w.id and a.person_id=$3 and not a.draft) as mine,
+        w.organizer_id=$3 as "isOrganizer",w.ready_at is not null as ready
         from when_poll_group g join when_poll w on w.id=g.poll_id join person o on o.id=w.organizer_id, lateral (select count(*)::int as answered from when_answer a where a.poll_id=w.id and not a.draft) n
         where g.org_id=$1 and g.loop_id=$2 and ((w.status='open' and w.deadline>clock_timestamp()-interval '7 days')
           or (w.status='sent' and w.chosen_slot+make_interval(mins=>w.duration_min)>clock_timestamp()-interval '12 hours'))
         order by w.created_at desc,w.id limit 20`, [scope.orgId, scope.loopId, p.personId])).rows;
     });
   } catch (error) { if (absent(error)) return []; throw error; }
+}
+
+/** A poll's group as a line of "Your polls" names it. */
+export type PollTag = { ref: string; name: string; href: string; loopId: string };
+/**
+ * The group of each poll in a list, for "Your polls": the poll's id to its group, or to null for a poll made on its own.
+ * A poll whose group the viewer cannot read is left out, so a line never names a group the viewer is not in.
+ */
+export async function groupsOfPolls(db: Db, p: Principal, pollIds: readonly string[]): Promise<Map<string, PollTag | null>> {
+  if (!pollIds.length) return new Map();
+  try {
+    return await db.tx(async q => {
+      const { rows } = await q.query<Scope & { pollId: string }>('select poll_id as "pollId",org_id as "orgId",loop_id as "loopId" from when_poll_group where poll_id=any($1)', [pollIds]);
+      const tags = new Map<string, PollTag | null>(pollIds.map(id => [id, null]));
+      const seen = new Map<string, PollTag | undefined>();
+      for (const row of rows) {
+        const key = `${row.orgId}/${row.loopId}`;
+        if (!seen.has(key)) {
+          const group = await canAccessLoop(q, p, row.orgId, row.loopId, 'read') ? await named(q, row) : null;
+          seen.set(key, group ? { ref: group.ref, name: group.name, href: group.href, loopId: row.loopId } : undefined);
+        }
+        const tag = seen.get(key);
+        if (tag) tags.set(row.pollId, tag); else tags.delete(row.pollId);
+      }
+      return tags;
+    });
+  } catch (error) { if (absent(error)) return new Map(pollIds.map(id => [id, null])); throw error; }
 }

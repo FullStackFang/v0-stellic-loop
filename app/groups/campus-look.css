@@ -290,3 +290,27 @@
   .gb :is(.lp-btn, .lt-primary, .emba-form button, .lp-mb-go, .lp-mb-quiet, .lp-mb-role, .lp-mb-seg button, .lp-fold, .gt-go), .gt .gt-it .emba-form:not(:has(label)) button { min-height: 36px; }
   .gb .lp-fold { min-width: 36px; }
 }
+
+/* The group's polls (public/demo/mockups-group-polls.html, A): a pill on the bar with its count, red when one waits on
+   the reader, and a tab of the group's polls, open then set, one line each. On a phone, Resources and Members move under
+   More so Find a time keeps its place on the bar. */
+.gt-bar > a span.hot { background: var(--action); color: var(--paper); }
+.gt-more > div a.gt-narrow { display: none; }
+.gt-polls { position: relative; margin: 26px 6px 0 0; padding: 22px 14px 14px; border-radius: var(--r); background: var(--paper); box-shadow: 0 0 0 1.5px var(--ink), 5px 5px 0 var(--field-shadow); }
+.gt section.gt-polls > h3 { position: absolute; top: -12px; left: 14px; margin: 0; height: 25px; padding: 0 11px; display: inline-flex; align-items: center; border-radius: 12px 12px 12px 3px; background: var(--ink); color: var(--field); font-size: 12.5px; font-weight: 700; letter-spacing: 0; white-space: nowrap; }
+.gt-polls ul { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.gt-polls a { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(90px, 150px) auto; align-items: center; gap: 14px; padding: 8px; border-radius: 18px 18px 18px 5px; background: var(--wash); box-shadow: inset 0 0 0 1.5px var(--ink); color: var(--ink); text-decoration: none; }
+.gt-polls a:hover { background: color-mix(in oklab, var(--field) 26%, var(--paper)); } .gt-polls a:focus-visible { outline: 2px solid var(--action); outline-offset: 2px; }
+.gt-polls .gt-dtile { width: 54px; height: 50px; } .gt-polls .gt-dtile b { font-size: 20px; } .gt-polls .gt-dtile.set { background: var(--ink); color: var(--field); box-shadow: none; }
+.gt-pt { min-width: 0; } .gt-pt b { display: block; font-size: 16px; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gt-pt small { display: block; font-size: 13px; color: var(--on-field-2, var(--ink-2)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gt-pm { height: 10px; border-radius: 99px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); overflow: hidden; } .gt-pm i { display: block; height: 100%; width: calc(var(--p) * 100%); background: var(--action); }
+.gt-pp { grid-column: 4; display: inline-flex; align-items: center; height: 32px; padding: 0 12px; border-radius: 99px; background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink), 2px 2px 0 var(--ink); font-size: 13px; font-weight: 680; white-space: nowrap; }
+.gt-pp.go { background: var(--action); color: var(--paper); } .gt-pp.set { background: var(--ink); color: var(--field); }
+@media (max-width: 900px) {
+  .gt-bar > a.gt-wide { display: none; } .gt-more > div a.gt-narrow { display: inline-flex; }
+  .gt-bar > a.go { display: inline-flex; background: var(--action); color: var(--paper); }
+  .gt-bar > a span.hot { display: grid; min-width: 17px; height: 17px; padding: 0 4px; font-size: 10.5px; }
+  .gt-polls a { grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; } .gt-pm { display: none; } .gt-pp { grid-column: 3; height: 30px; padding: 0 10px; font-size: 12.5px; }
+  .gt-polls .gt-dtile { width: 48px; height: 46px; } .gt-pt b { font-size: 14.5px; } .gt-pt small { font-size: 12px; }
+}

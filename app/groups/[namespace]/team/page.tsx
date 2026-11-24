@@ -43,10 +43,11 @@ type Signed = NonNullable<Awaited<ReturnType<typeof getPortalPrincipal>>>;
 // "This week" opens first: what is coming up, a column a day, with what waits on the reader marked.
 // The bar is one row of pills (public/demo/mockups-group-bar.html, A): what people do together, then Members. Events, ideas and travel are one
 // place, "Plans". Decisions, claims and outputs are opened from the counts in the head, and the rest sits under "More".
-const TABS = [['all', 'This week'], ['plans', 'Plans'], ['asks', 'Asks'], ['resources', 'Resources'], ['decisions', 'Decisions'], ['claims', 'Claims'], ['outputs', 'Outputs'], ['brief', 'Brief'], ['mine', 'Your saves']] as const;
+// "Polls" is the group's own Loopd When polls, open then set (public/demo/mockups-group-polls.html, A).
+const TABS = [['all', 'This week'], ['polls', 'Polls'], ['plans', 'Plans'], ['asks', 'Asks'], ['resources', 'Resources'], ['decisions', 'Decisions'], ['claims', 'Claims'], ['outputs', 'Outputs'], ['brief', 'Brief'], ['mine', 'Your saves']] as const;
 type Tab = typeof TABS[number][0];
 /** The sections with a pill in the bar. */
-const BAR: readonly Tab[] = ['all', 'plans', 'asks', 'resources'];
+const BAR: readonly Tab[] = ['all', 'polls', 'plans', 'asks', 'resources'];
 /** The sections kept under "More". */
 const MORE: readonly Tab[] = ['brief', 'mine'];
 /** Addresses from before events, ideas and travel were one place. */
@@ -74,8 +75,8 @@ async function load(principal: Signed, route: GroupRoute, tab: Tab) {
     shown(['brief'], () => managersOnly(briefHistory(db(), principal, scope))), shown(['mine'], () => myRecentRecords(db(), principal, scope)), shown(['resources'], () => listResources(db(), principal, scope)),
     // Nearby is listed to everyone in the group; the feeds, with their last results, only to owners and organizers.
     shown(['plans'], () => nearby(db(), principal, scope)), shown(['plans'], async () => await can('manage') ? teamFeeds(db(), principal, scope) : []), groupTile(db(), principal, scope),
-    // Loopd When: the group's open polls, and the ones whose time is set.
-    shown(['all', 'plans'], () => groupPolls(db(), principal, scope))]);
+    // Loopd When: the group's open polls, and the ones whose time is set. Read on every tab, for the count on the Polls pill.
+    groupPolls(db(), principal, scope)]);
   });
   if (!opened) return null;
   const { group, scope, data: [state, brief, events, manager, upcoming, archived, asks, canPost, on, feed, travel, history, mine, resources, near, feeds, tile, polls] } = opened;
@@ -151,7 +152,11 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
     </div></li>;
   };
 
-  const counts = { decisions: state.decisions.items.length + state.decisions.more, claims: state.claims.items.length + state.claims.more, outputs: state.outputs.items.length + state.outputs.more, resources: brief.resources.links.items.length + brief.resources.links.more + brief.resources.texts.items.length + brief.resources.texts.more, asks: brief.asks.open };
+  const counts = { decisions: state.decisions.items.length + state.decisions.more, claims: state.claims.items.length + state.claims.more, outputs: state.outputs.items.length + state.outputs.more, resources: brief.resources.links.items.length + brief.resources.links.more + brief.resources.texts.items.length + brief.resources.texts.more, asks: brief.asks.open,
+    polls: polls.filter(poll => !poll.chosenSlot).length };
+  /** What a poll wants from the reader: the time picked when it is theirs and ready, their times when they have not given them. */
+  const pollWants = (poll: typeof polls[number]) => poll.chosenSlot ? null : poll.isOrganizer && poll.ready ? 'Pick the time' : !poll.mine ? 'Add your times' : null;
+  const pollsWaiting = polls.some(pollWants);
   const pastDue = state.claims.items.filter(item => item.pastDue).length, waiting = state.claims.items.filter(item => item.claimStatus === 'proposed').length;
   const flagged = state.conflicts.items.length + state.conflicts.more;
   const latest = state.decisions.items.reduce<RecordView | null>((best, item) => !best || item.createdAt > best.createdAt ? item : best, null);
@@ -182,7 +187,7 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
   const findTime = `/when/new?group=${encodeURIComponent(route.slug ? `${route.namespace}/${route.slug}` : route.namespace)}`;
   const cards: Card[] = tab !== 'all' ? [] : [
     // A poll for a time: on today while it waits for the reader's times, then on its last day to answer, then on the day that was set.
-    ...(polls ?? []).map((poll): Card => { const set = poll.chosenSlot, wants = !set && !poll.mine;
+    ...polls.map((poll): Card => { const set = poll.chosenSlot, wants = !set && !poll.mine;
       return { key: `w${poll.id}`, day: set ? fromToday(dayIn(set)) : wants ? today : fromToday(dayIn(poll.deadline)), you: wants ? 'Needs your times' : undefined, cls: 'gt-ask', body: <>
         <p className="gt-kind"><span>{set ? 'Time set' : 'Find a time'}</span><i>{set ? clock(set) : `Answer by ${shortDay(dayIn(poll.deadline))}`}</i></p><p className="gt-stmt"><Link href={`/when/${poll.id}`}>{poll.title}</Link></p>
         {!set && <p className="gt-meter" style={{ '--p': poll.size ? poll.answered / poll.size : 0 } as React.CSSProperties}><i /></p>}
@@ -236,7 +241,7 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
     ...(asks?.closed.items ?? []).map(ask => ({ key: `a${ask.number}`, kind: 'ask', text: ask.question, sub: `Ask, closed · ${nameOf(ask.by)}`, at: ask.closesAt, href: askPath(ask) })),
   ].sort((a, b) => a.at < b.at ? 1 : -1).slice(0, SETTLED);
   const fact = (count: number, one: string) => <b>{count} <small>{count === 1 ? one : `${one}s`}</small></b>;
-  const tabLink = ([key, label]: readonly [Tab, string]) => <Link key={key} href={href(key)} scroll={false} aria-current={key === tab ? 'page' : undefined} aria-label={key === 'all' ? label : undefined}>{key === 'all' ? <><i className="gt-lg">{label}</i><i className="gt-sm">Week</i></> : label}{key in counts && counts[key as keyof typeof counts] > 0 && <span>{counts[key as keyof typeof counts]}</span>}</Link>;
+  const tabLink = ([key, label]: readonly [Tab, string]) => <Link key={key} href={href(key)} scroll={false} aria-current={key === tab ? 'page' : undefined} aria-label={key === 'all' ? label : undefined} className={key === 'resources' ? 'gt-wide' : undefined}>{key === 'all' ? <><i className="gt-lg">{label}</i><i className="gt-sm">Week</i></> : label}{key in counts && counts[key as keyof typeof counts] > 0 && <span className={key === 'polls' && pollsWaiting ? 'hot' : undefined}>{counts[key as keyof typeof counts]}</span>}</Link>;
   const at = (key: Tab) => key === tab ? 'page' as const : undefined;
 
   return <div className="gt">
@@ -258,11 +263,11 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
 
     <Inside group={group} pictures={data.inside} />
 
-    <nav className="gt-bar" aria-label="Team sections">{TABS.filter(([key]) => BAR.includes(key)).map(tabLink)}<Link href={base}>Members</Link>
+    <nav className="gt-bar" aria-label="Team sections">{TABS.filter(([key]) => BAR.includes(key)).map(tabLink)}<Link className="gt-wide" href={base}>Members</Link>
       <span className="gt-sp" />
       {canPost && <Link className="go" href={findTime}>Find a time</Link>}
       <details className="gt-more" data-on={MORE.includes(tab) || undefined}><summary>{MORE.includes(tab) ? TABS.find(([key]) => key === tab)![1] : 'More'}<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6" /></svg></summary>
-        <div>{canPost && <Link className="go" href={findTime}>Find a time</Link>}<Link href="/when">Your polls</Link>{TABS.filter(([key]) => MORE.includes(key)).map(tabLink)}
+        <div><Link className="gt-narrow" href={href('resources')} scroll={false} aria-current={at('resources')}>Resources</Link><Link className="gt-narrow" href={base}>Members</Link>{TABS.filter(([key]) => MORE.includes(key)).map(tabLink)}
           {manager && <Link href={`${href('brief')}#post`}>Post an announcement</Link>}
           {manager && <Link href={`${base}/organize`} title="Interest in each event by day, and how each open ask is filling.">Organizer view</Link>}
           <Link href="/groups/connections" title="Connect Claude or another assistant once, and it reads this record before it drafts anything for the team.">Connect an assistant</Link></div></details></nav>
@@ -284,11 +289,17 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
             <ul className="gt-minis">{settledList.map(item => <li key={item.key} className="gt-mini"><i className={`gt-g ${item.kind}`} /><span><b><Link href={item.href}>{item.text}</Link></b><small>{item.sub}</small></span><time>{shortDay(dayIn(item.at))}</time></li>)}</ul></>}
         </section>}
 
-        {tab === 'plans' && polls && <section id="times" aria-label="Finding a time"><h3>Finding a time</h3>
-          {polls.length ? <ul className="lp-list">{polls.map(poll => <li key={poll.id} className="lp-event"><span className="lp-topic">{poll.chosenSlot ? `${shortDay(dayIn(poll.chosenSlot))}, ${clock(poll.chosenSlot)}` : `By ${shortDay(dayIn(poll.deadline))}`}</span>
-            <div className="lp-what"><p className="lp-stmt"><Link href={`/when/${poll.id}`}>{poll.title}</Link>{!poll.chosenSlot && !poll.mine && <span className="lp-chip lp-chip-open">Needs your times</span>}</p>
-              <p className="lp-sub"><span>{poll.chosenSlot ? 'Time set' : 'Open'}</span><span>{poll.organizerName} asked</span><span>{poll.answered} of {poll.size} answered</span></p></div></li>)}</ul>
-            : <p className="lp-empty">No poll is open. &quot;Find a time&quot; asks the group when it can meet, and the time you pick shows here.</p>}
+        {tab === 'polls' && <section id="polls" aria-label="Polls">
+          {([['Open', polls.filter(poll => !poll.chosenSlot)], ['Time is set', polls.filter(poll => poll.chosenSlot)]] as const).filter(([, some]) => some.length).map(([label, some]) =>
+            <section key={label} className="gt-polls" aria-label={label}><h3>{label} · {some.length}</h3><ul>
+            {some.map(poll => { const set = poll.chosenSlot, day = dayIn(set ?? poll.deadline), wants = pollWants(poll), asker = poll.isOrganizer ? 'You asked' : `${poll.organizerName} asked`;
+              return <li key={poll.id}><Link href={`/when/${poll.id}`}>
+                <span className={`gt-dtile${set ? ' set' : wants ? ' today' : ''}`}><small>{set ? dow(day) : `By ${dow(day)}`}</small><b>{dayNum(day)}</b></span>
+                <span className="gt-pt"><b>{poll.title}</b><small>{set ? `${dowLong(day)} ${dayNum(day)} ${mon(day)}, ${clock(set)} · ${asker}` : `${asker} · ${poll.answered} of ${poll.size} answered${poll.isOrganizer && poll.ready ? ' · ready for you' : ''}`}</small></span>
+                {!set && <span className="gt-pm" style={{ '--p': poll.size ? poll.answered / poll.size : 0 } as React.CSSProperties}><i /></span>}
+                <span className={`gt-pp${wants ? ' go' : set ? ' set' : ''}`}>{wants ?? (set ? 'Time is set' : 'Open')}</span>
+              </Link></li>; })}</ul></section>)}
+          {!polls.length && <p className="lp-empty">No poll yet. {canPost ? <>&quot;Find a time&quot; asks the group when it can meet; its answers and the time you pick show here.</> : 'When someone in the group asks when people can meet, it shows here.'}</p>}
         </section>}
 
         {tab === 'decisions' && <section id="decisions" aria-label="Current decisions">
