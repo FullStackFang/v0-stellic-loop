@@ -8,6 +8,8 @@ import { listGrants } from '@/lib/emba/consent';
 import { assistantName } from '@/lib/emba/team-text';
 import { noteConnectView } from '@/lib/emba/pilot-metrics';
 import { hasAssistants } from '@/lib/campus/ink';
+import { assistantReady } from '@/lib/campus/interest';
+import { campusOf } from '@/lib/campus/people';
 import { ActionForm } from '@/components/emba/portal-forms';
 import { CopyLink, CopyText } from '@/components/emba/copy-link';
 import { dayNum, mon } from '@/lib/days';
@@ -53,6 +55,8 @@ export default async function ConnectionsPage({ searchParams }: { searchParams?:
   const inside = (loopId: string): string[] => groups.filter(item => item.parentLoopId === loopId).flatMap(item => [item.orgName, ...inside(item.loopId)]);
   const runs = groups.some(group => group.canStart);
   const teamUrl = config ? new URL('/api/mcp/team', config.audience).href : '';
+  // The going-out tools (openspec campus-assistant-tools): listed once their tables exist, and only for someone with a campus.
+  const campusUrl = config && await assistantReady(db()) && await campusOf(db(), principal) ? new URL('/api/mcp/campus', config.audience).href : '';
   // A link from an assistant with no grant yet names that assistant, so the form opens with it chosen.
   const asked = (await searchParams)?.assistant;
   const chosen = typeof asked === 'string' && config?.clientIds.includes(asked) ? asked : undefined;
@@ -70,7 +74,7 @@ export default async function ConnectionsPage({ searchParams }: { searchParams?:
     <div className={`lp-cx${giving ? '' : ' lp-cx-one'}`}><div>
       <section className="lp-cx-half"><h2 className="lp-cx-step"><b>1</b>Connect Loopd once</h2>
         {ready ? <><p className="lp-cx-ready"><span className="lp-chip">Ready</span><span>Loopd has an HTTPS MCP endpoint and sign-in configuration. A successful host connection still needs to be tested with your account.</span></p>
-          <div className="lp-cx-urls"><div><label>Team tools URL (brief, decisions, outputs, claims)<input readOnly value={teamUrl}/></label><CopyLink url={teamUrl} label="Copy"/></div><div><label>MCP server URL (earlier tools)<input readOnly value={config!.audience}/></label><CopyLink url={config!.audience} label="Copy"/></div></div></>
+          <div className="lp-cx-urls"><div><label>Team tools URL (brief, decisions, outputs, claims)<input readOnly value={teamUrl}/></label><CopyLink url={teamUrl} label="Copy"/></div>{campusUrl && <div><label>Going out (what is on, who is going)<input readOnly value={campusUrl}/></label><CopyLink url={campusUrl} label="Copy"/></div>}<div><label>MCP server URL (earlier tools)<input readOnly value={config!.audience}/></label><CopyLink url={config!.audience} label="Copy"/></div></div></>
           : <p className="lp-cx-note" role="status">This deployment is not ready for assistant sign-in. It needs Clerk browser identity, OAuth issuer/JWKS, an HTTPS <code>/api/mcp</code> audience, and allowed client IDs. Your groups remain accessible through this website.</p>}
         <div className="lp-cx-who" role="radiogroup" aria-label="Steps for">{guides.map(([key, name]) => <label key={key}><input type="radio" name="guide" value={key} defaultChecked={key === first}/>{name}</label>)}</div>
         <div className="lp-cx-guide" data-guide="claude"><ol><li>In Claude, open Customize → Connectors → Add → Custom → Web.</li><li>Enter the Team tools URL above.</li><li>Choose sign-in and Claude’s published OAuth identity, then connect your account.</li></ol>

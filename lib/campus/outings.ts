@@ -2,6 +2,7 @@ import 'server-only';
 import { randomBytes } from 'node:crypto';
 import type { Db, Q } from '../db';
 import { CampusError } from './errors';
+import { dropInterest } from './interest';
 import { knownTo, timesOut } from './knows';
 import { metres } from './sections';
 import { checkInOpen, endOf } from './time';
@@ -57,8 +58,11 @@ async function hold(q: Q, listingId: string, now: Date): Promise<Held> {
   return listing;
 }
 const newToken = () => randomBytes(12).toString('base64url');
-const add = (q: Q, outing: { id: string; listingId: string }, personId: string, registered: boolean) =>
-  q.query('insert into campus_outing_member(outing_id,listing_id,person_id,registered) values($1,$2,$3,$4)', [outing.id, outing.listingId, personId, registered]);
+/** Joining also removes the person's "interested" mark on the event (openspec campus-assistant-tools, design D5). */
+async function add(q: Q, outing: { id: string; listingId: string }, personId: string, registered: boolean) {
+  await q.query('insert into campus_outing_member(outing_id,listing_id,person_id,registered) values($1,$2,$3,$4)', [outing.id, outing.listingId, personId, registered]);
+  await dropInterest(q, personId, outing.listingId);
+}
 /** An outing nobody is in any more is removed, unless it is a plan's open one. */
 const sweep = (q: Q, outingId: string) =>
   q.query('delete from campus_outing o where o.id=$1 and not o.open_to_anyone and not exists(select 1 from campus_outing_member m where m.outing_id=o.id)', [outingId]);
@@ -68,15 +72,17 @@ const sweep = (q: Q, outingId: string) =>
  * Pressing it again changes nothing. Returns the share token of the outing the person is now in.
  */
 export async function imIn(db: Db, personId: string, listingId: string, now: Date = new Date()): Promise<{ token: string; joined: boolean }> {
-  return db.tx(async q => {
-    const listing = await hold(q, listingId, now), outings = await outingsOn(q, [listingId]);
-    const { rows: invites } = await q.query<{ id: string }>('select outing_id as id from campus_invite where invitee_id=$1 and outing_id=any($2::uuid[])', [personId, outings.map(outing => outing.id)]);
-    const picked = pickOuting(outings, personId, await knownTo(q, personId), new Set(invites.map(row => row.id)), await timesOut(q, personId));
-    if (picked.mine) return { token: picked.outing!.token, joined: false };
-    const outing = picked.outing ?? (await q.query<{ id: string; listingId: string; token: string }>('insert into campus_outing(listing_id,token,started_by) values($1,$2,$3) returning id,listing_id as "listingId",token', [listingId, newToken(), personId])).rows[0];
-    await add(q, outing, personId, listing.origin === 'feed');
-    return { token: outing.token, joined: true };
-  });
+  return db.tx(q => imInWith(q, personId, listingId, now));
+}
+/** "I'm in" inside a transaction the caller holds: the assistant's Join button marks its code used in the same one. */
+export async function imInWith(q: Q, personId: string, listingId: string, now: Date = new Date()): Promise<{ token: string; joined: boolean }> {
+  const listing = await hold(q, listingId, now), outings = await outingsOn(q, [listingId]);
+  const { rows: invites } = await q.query<{ id: string }>('select outing_id as id from campus_invite where invitee_id=$1 and outing_id=any($2::uuid[])', [personId, outings.map(outing => outing.id)]);
+  const picked = pickOuting(outings, personId, await knownTo(q, personId), new Set(invites.map(row => row.id)), await timesOut(q, personId));
+  if (picked.mine) return { token: picked.outing!.token, joined: false };
+  const outing = picked.outing ?? (await q.query<{ id: string; listingId: string; token: string }>('insert into campus_outing(listing_id,token,started_by) values($1,$2,$3) returning id,listing_id as "listingId",token', [listingId, newToken(), personId])).rows[0];
+  await add(q, outing, personId, listing.origin === 'feed');
+  return { token: outing.token, joined: true };
 }
 
 /** The outing behind a share link, or null. */
