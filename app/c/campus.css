@@ -1036,7 +1036,7 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-kinds { display: flex; gap: 4px; padding-left: 10px; overflow: hidden; }
 .cs .cs-kinds button { position: relative; z-index: 1; height: 30px; padding: 0 11px; border-radius: 11px 11px 0 0; font-size: 12.5px; font-weight: 700; white-space: nowrap; background: color-mix(in oklab, var(--cs-ink) 7%, var(--cs-page)); box-shadow: inset 0 1.5px 0 var(--cs-ink), inset 1.5px 0 0 var(--cs-ink), inset -1.5px 0 0 var(--cs-ink); }
 .cs .cs-kinds button:hover { background: var(--cs-field); } .cs .cs-kinds button[aria-pressed=true] { background: var(--cs-paper); margin-bottom: -1.5px; height: 31.5px; }
-.cs-box { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 6px; height: 152px; overflow: hidden; padding: 10px; border-radius: 4px 14px 14px 14px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+.cs-box { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 6px; height: 122px; overflow: hidden; padding: 10px; border-radius: 4px 14px 14px 14px; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
 .cs .cs-place { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; height: 30px; padding: 0 11px 0 6px; border-radius: 99px; font-size: 12.5px; font-weight: 680; white-space: nowrap; background: var(--cs-paper); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
 .cs .cs-place:hover { background: var(--cs-field); } .cs .cs-place[aria-pressed=true] { color: var(--cs-field); background: var(--cs-ink); }
 .cs-place span { overflow: hidden; text-overflow: ellipsis; } .cs-place svg { flex: none; width: 18px; height: 18px; padding: 2px; border-radius: 50%; background: var(--cs-field); color: var(--cs-ink); box-shadow: inset 0 0 0 1.2px var(--cs-ink); }
@@ -1056,3 +1056,5 @@ button.cs-dseat:not(.you)::before { content: ''; width: 14px; height: 14px; back
 .cs-when .mini { display: flex; height: 16px; } .cs-when .mini .cs-face { width: 16px; height: 16px; } .cs-when .mini > * + * { margin-left: -4px; } .cs-when .mini em { font-style: normal; font-size: 11px; font-weight: 600; color: var(--cs-mute); }
 .cs-when .send { display: flex; align-items: center; gap: 8px; } .cs-when .send .cs-note { flex: 1; }
 .cs-sent { margin-top: 10px; padding: 10px 12px; border-radius: 14px; font-size: 13.5px; line-height: 1.3; background: var(--cs-field); box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
+/* Picking a place needs the whole panel: it takes its full height while posting, so nothing in it scrolls. */
+.cs-wide-post .cs-sheet:has(.cs-pick) { max-height: none; }
