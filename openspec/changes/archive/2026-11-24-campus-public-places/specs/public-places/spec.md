@@ -82,7 +82,7 @@ The system SHALL serve `/llms.txt` as plain text stating what Loopd is, the camp
 - **THEN** the guide file names it without a code change
 
 ### Requirement: One address to ask
-The system SHALL answer `GET /api/ask` with JSON listing up to 20 public events near a campus, soonest first, each with title, start, place name, page address and how many are going. It SHALL accept `near` (a campus), `for` (a number of people) and `when` (today, tonight, tomorrow or week). It SHALL need no key and no sign-in. A value it does not know SHALL NOT cause an error.
+The system SHALL answer `GET /api/ask` with JSON listing up to 20 public events near a campus, soonest first, each with title, start and end (in UTC and on the campus clock), place name, the place's page, minutes on foot from the campus when known, page address and how many are going. It SHALL accept `near` (a campus), `for` (a number of people) and `when` (today, tonight, tomorrow or week). It SHALL need no key and no sign-in. A value it does not know SHALL NOT cause an error.
 
 #### Scenario: Tonight near a campus
 - **WHEN** a client asks with `near=cornell-tech&for=4&when=tonight`

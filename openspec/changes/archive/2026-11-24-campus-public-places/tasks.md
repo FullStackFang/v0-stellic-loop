@@ -25,6 +25,6 @@
 
 - [x] 4.1 Run only the affected tests with `--maxWorkers=3`, then eslint and `tsc --noEmit`.
 - [x] 4.2 On the dev server, fetch a place page, an event page, `/llms.txt` and `/api/ask` with `curl` (no script, no cookies) and read what comes back.
-- [ ] 4.3 One production build at the end, with the dev server stopped, since new routes ship.
+- [x] 4.3 One production build at the end, with the dev server stopped, since new routes ship. Done by the Vercel build of the deploy (0f5c9a5), which succeeded; the dev server stayed up.
 - [x] 4.4 Commit on local main (no push).
-- [ ] 4.5 (Founder) After publishing, paste a place page address into an assistant and ask it the mockup's question, to see what it reads.
+- [x] 4.5 (Founder) After publishing, paste a place page address into an assistant and ask it the mockup's question, to see what it reads. Done 2026-11-24 with a subagent fetching www.getloopdin.social: it named RIVAA Gallery and Motorgate Plaza with local times, walk times and counts, and saw no person. Group size (`for`) still filters nothing; left for later.
