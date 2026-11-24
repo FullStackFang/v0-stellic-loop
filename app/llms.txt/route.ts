@@ -1,6 +1,6 @@
 import { db } from '@/lib/db';
 import { listCampuses } from '@/lib/campus/listings';
-import { ASK_WHEN, siteUrl } from '@/lib/campus/public';
+import { ASK_WHEN, publicEvents, siteUrl } from '@/lib/campus/public';
 
 // The guide file for assistants (openspec campus-public-places, design D6): what Loopd is, what can be read, the one
 // address to ask, and what is not here. The campuses come from the database, so a new one is named without a code change.
@@ -8,7 +8,10 @@ import { ASK_WHEN, siteUrl } from '@/lib/campus/public';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const campuses = await listCampuses(db());
+  const campuses = await listCampuses(db()), now = new Date(), week = new Date(now.getTime() + 7 * 86400000);
+  // The example asks about a campus with something on this week, so trying it gives an answer.
+  let example = campuses[0]?.slug ?? 'cornell';
+  for (const campus of campuses) if ((await publicEvents(db(), campus, { from: now, to: week, now, limit: 1 })).length) { example = campus.slug; break; }
   const text = `# Loopd
 
 > Where college students go out in groups. Loopd lists what is on near each campus: events from public calendars and
@@ -31,9 +34,12 @@ Pages need no sign-in and no script. Each carries schema.org Place or Event data
 
 GET ${siteUrl('/api/ask')}?near={campus}&for={people}&when={${ASK_WHEN.join('|')}}
 
-Returns JSON: up to 20 events, soonest first, each with its title, start, place, page address and how many are going.
+Returns JSON: up to 20 events, soonest first, each with its title, start and end (UTC, and on the campus clock as
+startLocal and endLocal), place, the place's page, minutes on foot from campus, the event's page and how many are going.
+"when" is on the campus clock: today is now to midnight, tonight is 5pm to 4am, tomorrow is the whole next day, week is
+seven days; it defaults to week. "for" is carried back in the answer and does not filter anything yet.
 No key and no sign-in. Answers can be up to five minutes old. Example:
-${siteUrl(`/api/ask?near=${campuses[0]?.slug ?? 'cornell'}&for=4&when=tonight`)}
+${siteUrl(`/api/ask?near=${example}&for=4&when=week`)}
 
 ## What you will not find
 

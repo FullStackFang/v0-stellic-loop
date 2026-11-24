@@ -15,7 +15,8 @@ export type PublicEvent = {
   /** The feed's name ("Luma"); null for an event the admin entered. Never its link. */
   source: string | null;
   startsAt: string; endsAt: string | null;
-  place: { name: string; tag: string } | null;
+  /** Where it is, with minutes on foot from the campus when its ground is drawn. */
+  place: { name: string; tag: string; walk: number | null } | null;
   /** How many are in, the number the signed-out campus list already shows. */
   going: number;
   campus: PublicCampus;
@@ -33,13 +34,16 @@ async function publicRule(q: Q, now: string) {
     and coalesce(l.ends_at,l.starts_at+interval '2 hours')>${now}::timestamptz${deals ? ' and l.deal_id is null' : ''}${review ? ' and not l.waiting' : ''}`;
 }
 
-type Row = Omit<PublicEvent, 'place' | 'campus'> & { placeName: string | null; otherNames: string[] | null; slug: string; campusName: string; tz: string };
+type Row = Omit<PublicEvent, 'place' | 'campus'> & { placeName: string | null; otherNames: string[] | null; lat: number | null; lon: number | null; slug: string; campusName: string; tz: string };
 const EVENT = `l.id,l.title,l.about,l.host_name as host,f.source,l.starts_at as "startsAt",l.ends_at as "endsAt",
-  p.name as "placeName",p.other_names as "otherNames",c.slug,c.name as "campusName",c.tz,
+  p.name as "placeName",p.other_names as "otherNames",p.lat,p.lon,c.slug,c.name as "campusName",c.tz,
   (select count(*)::int from campus_outing_member m where m.listing_id=l.id) as going
   from campus_listing l join campus c on c.id=l.campus_id left join campus_feed f on f.id=l.feed_id left join campus_place p on p.id=l.place_id`;
-const shape = ({ placeName, otherNames, slug, campusName, tz, ...row }: Row): PublicEvent => ({
-  ...row, place: placeName === null ? null : { name: placeName, tag: placeTag({ name: placeName, otherNames: otherNames ?? [] }) }, campus: { slug, name: campusName, tz } });
+/** Minutes on foot from the campus to a point, when the campus's ground is drawn. */
+const walkFrom = (campusSlug: string, lat: number, lon: number) => { const rest = landOf(campusSlug)?.[0]?.rest; return rest ? walkMinutes(rest, [lon, lat]) : null; };
+const shape = ({ placeName, otherNames, lat, lon, slug, campusName, tz, ...row }: Row): PublicEvent => ({
+  ...row, place: placeName === null ? null : { name: placeName, tag: placeTag({ name: placeName, otherNames: otherNames ?? [] }), walk: lat === null || lon === null ? null : walkFrom(slug, lat, lon) },
+  campus: { slug, name: campusName, tz } });
 
 /** A campus's public events that are on at some point between `from` and `to`, soonest first. */
 export async function publicEvents(q: Q, campus: Pick<Campus, 'id'>, { from, to, placeId, now = new Date(), limit }: { from: Date; to: Date; placeId?: string; now?: Date; limit?: number }): Promise<PublicEvent[]> {
@@ -66,8 +70,7 @@ async function placeRows(q: Q, campusId: string, now: Date): Promise<PlaceRow[]>
   return rows;
 }
 const placeOf = (row: PlaceRow, campusId: string, campus: PublicCampus): PublicPlace => {
-  const rest = landOf(campus.slug)?.[0]?.rest;
-  return { id: row.id, campusId, name: row.name, tag: placeTag(row), lat: row.lat, lon: row.lon, walk: rest ? walkMinutes(rest, [row.lon, row.lat]) : null, recordPublic: row.recordPublic, campus };
+  return { id: row.id, campusId, name: row.name, tag: placeTag(row), lat: row.lat, lon: row.lon, walk: walkFrom(campus.slug, row.lat, row.lon), recordPublic: row.recordPublic, campus };
 };
 
 /** The place a public address names, when it has a public event in the next 14 days or a public record; else null. */

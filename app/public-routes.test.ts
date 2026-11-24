@@ -45,6 +45,10 @@ describe('the guide file', () => {
     await t.db.query("insert into campus(slug,name,tz) values('pratt','Pratt','America/New_York')");
     expect(await (await llms()).text()).toContain('- Pratt (near=pratt)');
   });
+  it('gives as its example a campus with something on this week', async () => {
+    await event('Greek night', 30);
+    expect(await (await llms()).text()).toContain('/api/ask?near=cornell-tech&for=4&when=week');
+  });
 });
 
 describe('the ask address', () => {
@@ -53,10 +57,10 @@ describe('the ask address', () => {
     await event('Lunch', 1); await event('Tomorrow', 30); await event('Ana and Dev dinner', 7, 'member');
     const { response, body } = await get('?near=cornell-tech&for=4&when=tonight');
     expect(response.headers.get('cache-control')).toBe('public, s-maxage=300, stale-while-revalidate=60');
-    expect(body).toMatchObject({ near: 'cornell-tech', campus: 'Cornell Tech', for: 4, when: 'tonight', from: '2026-11-24T22:00:00.000Z' });
+    expect(body).toMatchObject({ near: 'cornell-tech', campus: 'Cornell Tech', timezone: 'America/New_York', for: 4, when: 'tonight', from: '2026-11-24T22:00:00.000Z' });
     expect(body.events).toEqual([
-      { title: 'Greek night', start: at(6), end: null, place: 'Nisi Bistro', page: siteUrl(`/events/${early}`), going: 0 },
-      { title: 'Late quiz', start: at(9), end: null, place: 'Nisi Bistro', page: siteUrl(`/events/${late}`), going: 0 }]);
+      { title: 'Greek night', start: at(6), end: null, startLocal: 'Tue Nov 24, 6pm', endLocal: null, place: 'Nisi Bistro', placePage: siteUrl('/places/cornell-tech/nisi'), walkMinutes: expect.any(Number), page: siteUrl(`/events/${early}`), going: 0 },
+      { title: 'Late quiz', start: at(9), end: null, startLocal: 'Tue Nov 24, 9pm', endLocal: null, place: 'Nisi Bistro', placePage: siteUrl('/places/cornell-tech/nisi'), walkMinutes: expect.any(Number), page: siteUrl(`/events/${late}`), going: 0 }]);
   });
   it('gives at most 20', async () => {
     for (let i = 0; i < 23; i++) await event(`Night ${i}`, 24 + i);

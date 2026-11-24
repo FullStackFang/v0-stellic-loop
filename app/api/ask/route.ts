@@ -1,7 +1,8 @@
 import type { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { listCampuses } from '@/lib/campus/listings';
-import { ASK_WHEN, askWindow, eventPath, publicEvents, siteUrl, type AskWhen } from '@/lib/campus/public';
+import { ASK_WHEN, askWindow, eventPath, placePath, publicEvents, siteUrl, type AskWhen } from '@/lib/campus/public';
+import { localParts, timeLabel } from '@/lib/campus/time';
 
 // The one address an assistant can ask (openspec campus-public-places, design D7): what is on near a campus, for this
 // many people, at this time. The same public facts as the pages. No key, no cookies read, and the CDN keeps each
@@ -10,6 +11,9 @@ export const dynamic = 'force-dynamic';
 
 const ASK_MOST = 20;
 const HOW = `GET /api/ask?near={campus}&for={people}&when={${ASK_WHEN.join('|')}}`;
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+/** 'Sat Nov 28, 8am' on the campus clock, so an assistant need not convert. */
+const local = (tz: string, at: string) => { const { date, weekday } = localParts(tz, new Date(at)); return `${weekday} ${MONTHS[Number(date.slice(5, 7)) - 1]} ${Number(date.slice(8))}, ${timeLabel(tz, at)}`; };
 const answer = (body: object) => Response.json(body, { headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=60' } });
 
 export async function GET(request: NextRequest) {
@@ -23,6 +27,8 @@ export async function GET(request: NextRequest) {
   const now = new Date(), { from, to } = askWindow(when, campus.tz, now);
   // `for` is carried back: no place is marked for one person yet, so it filters nothing out (design D7).
   const events = await publicEvents(db(), campus, { from, to, now, limit: ASK_MOST });
-  return answer({ near: campus.slug, campus: campus.name, for: size, when, from: from.toISOString(), to: to.toISOString(), made: now.toISOString(),
-    events: events.map(event => ({ title: event.title, start: event.startsAt, end: event.endsAt, place: event.place?.name ?? null, page: siteUrl(eventPath(event.id)), going: event.going })) });
+  return answer({ near: campus.slug, campus: campus.name, timezone: campus.tz, for: size, when, from: from.toISOString(), to: to.toISOString(), made: now.toISOString(),
+    events: events.map(event => ({ title: event.title, start: event.startsAt, end: event.endsAt, startLocal: local(campus.tz, event.startsAt), endLocal: event.endsAt && local(campus.tz, event.endsAt),
+      place: event.place?.name ?? null, placePage: event.place && siteUrl(placePath(campus.slug, event.place.tag)), walkMinutes: event.place?.walk ?? null,
+      page: siteUrl(eventPath(event.id)), going: event.going })) });
 }
