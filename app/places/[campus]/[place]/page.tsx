@@ -6,7 +6,6 @@ import { byline, dayOf, PublicFrame, Structured } from '@/components/campus/publ
 import { db } from '@/lib/db';
 import { eventPath, placePath, publicEvents, publicPlace, siteUrl } from '@/lib/campus/public';
 import { placeRecord } from '@/lib/campus/record';
-import { schoolOf } from '@/lib/campus/schools';
 import { timeLabel } from '@/lib/campus/time';
 
 // The same for everyone and read again at most every five minutes (design D9). No page is built ahead: each is built
@@ -49,7 +48,7 @@ export default async function PublicPlacePage({ params }: Props) {
       location: { '@type': 'Place', name: place.name }, ...(event.host ? { organizer: { '@type': 'Organization', name: event.host } } : {}) })) };
   return <PublicFrame campus={place.campus} made={now}>
     <Structured data={structured} />
-    <main className="cs-pub" data-kit={schoolOf(place.campus.slug)}>
+    <main className="cs-pub">
       <header className="cs-pub-band">
         <h1>{place.name}</h1>
         <p>{place.walk ? `${place.walk} min walk from ${place.campus.name}` : `Near ${place.campus.name}`}</p>

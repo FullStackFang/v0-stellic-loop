@@ -70,6 +70,14 @@ it('is the same page signed in and signed out, and never asks who is looking', a
   expect(out).not.toContain('sign-in-provider');
 });
 
+it('wears the campus school colours on the bar, the page and the foot, whatever this browser last wore', async () => {
+  await event('Greek night', 32);
+  const html = await placeHtml();
+  expect(html).toContain('class="cs-pub-kit" data-kit="cornell"');
+  expect(html).toMatch(/<footer class="cs-ft" data-kit="cornell"/);
+  expect(html.indexOf('cs-pub-kit')).toBeLessThan(html.indexOf('cs-nav'));
+});
+
 it('shows the record numbers once public, and is found on the record alone', async () => {
   await setRecordPublic(t.db, nisi, true);
   const html = await placeHtml();

@@ -5,7 +5,6 @@ import { cache } from 'react';
 import { byline, dayOf, PublicFrame, Structured } from '@/components/campus/public-frame';
 import { db } from '@/lib/db';
 import { eventPath, placePath, PUBLIC_PLACE_DAYS, publicEvent, siteUrl } from '@/lib/campus/public';
-import { schoolOf } from '@/lib/campus/schools';
 import { timeLabel } from '@/lib/campus/time';
 
 // The same for everyone and read again at most every five minutes (design D9). Each page is built the first time it is asked for.
@@ -40,7 +39,7 @@ export default async function PublicEventPage({ params }: Props) {
     ...(event.host ? { organizer: { '@type': 'Organization', name: event.host } } : {}) };
   return <PublicFrame campus={event.campus} made={now}>
     <Structured data={structured} />
-    <main className="cs-pub" data-kit={schoolOf(event.campus.slug)}>
+    <main className="cs-pub">
       <header className="cs-pub-band">
         <h1>{event.title}</h1>
         <p><time dateTime={event.startsAt}>{dayOf(tz, event.startsAt, now)}, {timeLabel(tz, event.startsAt)}{event.endsAt ? `–${timeLabel(tz, event.endsAt)}` : ''}</time>

@@ -40,3 +40,5 @@
   .cs-pub-row { flex-wrap: wrap; } .cs-pub-what { flex-basis: calc(100% - 80px); } .cs-pub-count { margin-left: 72px; }
   .cs-pub-gate { flex-direction: column; align-items: stretch; gap: 10px; padding: 14px; border-radius: 18px 18px 18px 5px; text-align: center; }
 }
+/* The campus school's colours over the whole page, bar and foot too (components/campus/public-frame.tsx). */
+.cs-pub-kit { display: contents; }
