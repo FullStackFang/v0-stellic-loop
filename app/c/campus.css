@@ -260,6 +260,12 @@ body:has(.cs) { display: block; place-items: normal; padding: 0; background: okl
 .cs .cs-lvl-line.cs-kits > div { grid-column: 2 / -1; flex-wrap: nowrap; align-items: center; gap: 6px; }
 .cs .cs-lvl-line.cs-kits .cs-kit[aria-pressed] { width: 32px; height: 32px; padding: 0; justify-content: center; font-size: 0; }
 .cs .cs-lvl-line.cs-kits .cs-kit[aria-pressed] i { width: 20px; height: 20px; }
+/* A dot not worn fills its whole button, with no empty ring around it; the one worn sits inside the ink ring. */
+.cs .cs-lvl-line.cs-kits .cs-kit[aria-pressed=false] { box-shadow: none; }
+.cs .cs-lvl-line.cs-kits .cs-kit[aria-pressed=false] i { width: 28px; height: 28px; }
+.cs .cs-lvl-line.cs-kits .cs-kit[aria-pressed=false]:hover { box-shadow: inset 0 0 0 2px var(--cs-ink); }
+/* "Any school" opens up and to the left, like More below it, so its list stays inside the card. */
+.cs-lvl-line.cs-kits .cs-kit-menu { left: auto; right: 0; top: auto; bottom: calc(100% + 8px); border-radius: 16px 16px 5px 16px; transform-origin: 88% 100%; animation: cs-card .22s var(--cs-expo); }
 .cs-lvl-line.cs-kits .cs-kit-any { margin-left: auto; } .cs-lvl-line.cs-kits > .cs-kit-ask { grid-column: 1 / -1; margin: 4px 0 14px; }
 .cs-lvl-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 12px 14px 14px; border-top: 1px solid var(--cs-line); background: color-mix(in oklch, var(--cs-ink) 3%, var(--cs-paper)); }
 .cs-lvl-links { display: contents; } .cs-lvl-links a { display: inline-flex; align-items: center; height: 36px; padding: 0 12px; border-radius: 99px; font-size: 14px; font-weight: 600; box-shadow: inset 0 0 0 1.5px var(--cs-ink); }
